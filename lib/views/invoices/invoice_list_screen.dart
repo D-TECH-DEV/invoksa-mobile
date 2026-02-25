@@ -1,0 +1,202 @@
+import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_spacing.dart';
+import '../../core/constants/app_text_styles.dart';
+import '../../core/constants/app_radius.dart';
+import 'widgets/invoice_filter_chip.dart';
+import 'widgets/invoice_list_item.dart';
+import '../../core/routes/app_routes.dart';
+
+class InvoiceListScreen extends StatelessWidget {
+  const InvoiceListScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildAppBar(),
+            const Divider(height: 1, color: AppColors.border),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSearchBar(),
+                    const SizedBox(height: AppSpacing.lg),
+                    _buildFilters(),
+                    const SizedBox(height: AppSpacing.xl),
+                    _buildSectionHeader('RÉCENTES', 'Voir tout'),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildInvoicesList(),
+                    const SizedBox(height: AppSpacing.xl),
+                    Center(
+                      child: Text(
+                        'Fin de la liste des factures',
+                        style: AppTextStyles.caption.copyWith(
+                          fontStyle: FontStyle.italic,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 80), // Space for FAB
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, AppRoutes.invoiceCreate);
+        },
+        backgroundColor: AppColors.primary,
+        elevation: 4,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add, color: AppColors.background, size: 28),
+      ),
+    );
+  }
+
+  Widget _buildAppBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Factures',
+            style: AppTextStyles.headingLarge,
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_alt_outlined, color: AppColors.textPrimary),
+            onPressed: () {},
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6).withOpacity(0.8),
+        borderRadius: AppRadius.large,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          const Icon(Icons.search, color: AppColors.textSecondary, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Rechercher une facture ou un client...',
+                hintStyle: AppTextStyles.caption.copyWith(fontSize: 14),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilters() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          InvoiceFilterChip(label: 'Toutes', isSelected: true, onTap: () {}),
+          const SizedBox(width: AppSpacing.sm),
+          InvoiceFilterChip(label: 'Payées', isSelected: false, onTap: () {}),
+          const SizedBox(width: AppSpacing.sm),
+          InvoiceFilterChip(label: 'En attente', isSelected: false, onTap: () {}),
+          const SizedBox(width: AppSpacing.sm),
+          InvoiceFilterChip(label: 'Non payées', isSelected: false, onTap: () {}),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, String actionText) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: AppTextStyles.caption.copyWith(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        GestureDetector(
+          onTap: () {},
+          child: Text(
+            actionText,
+            style: AppTextStyles.body.copyWith(
+              color: const Color(0xFF2EC4B6),
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInvoicesList() {
+    return Column(
+      children: const [
+        InvoiceListItem(
+          invoiceId: 'INV-001',
+          clientName: 'Jean Dupont Consulting',
+          date: '12 Oct 2023',
+          amount: '1 250,00 €',
+          status: InvoiceListStatus.paid,
+        ),
+        InvoiceListItem(
+          invoiceId: 'INV-002',
+          clientName: 'SARL TechFlow',
+          date: '15 Oct 2023',
+          amount: '840,00 €',
+          status: InvoiceListStatus.unpaid,
+        ),
+        InvoiceListItem(
+          invoiceId: 'INV-003',
+          clientName: 'Marie Lambert',
+          date: '18 Oct 2023',
+          amount: '3 100,00 €',
+          status: InvoiceListStatus.pending,
+        ),
+        InvoiceListItem(
+          invoiceId: 'INV-004',
+          clientName: 'Agence Créa Design',
+          date: '20 Oct 2023',
+          amount: '450,00 €',
+          status: InvoiceListStatus.paid,
+        ),
+        InvoiceListItem(
+          invoiceId: 'INV-005',
+          clientName: 'Boulangerie Le Bon Pain',
+          date: '22 Oct 2023',
+          amount: '125,50 €',
+          status: InvoiceListStatus.unpaid,
+        ),
+        InvoiceListItem(
+          invoiceId: 'INV-006',
+          clientName: 'Cabinet Médical Pasteur',
+          date: '25 Oct 2023',
+          amount: '2 400,00 €',
+          status: InvoiceListStatus.paid,
+        ),
+      ],
+    );
+  }
+
+}
