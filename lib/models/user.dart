@@ -27,13 +27,13 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     id: json['id'],
-    username: json['username'],
-    email: json['email'],
+    username: json['username'] ?? '',
+    email: json['email'] ?? '',
     password: json['password'] ?? '',
-    role: json['role'],
+    role: json['role'] ?? 'USER',
     emailVerified: json['emailVerified'] ?? false,
-    createdAt: DateTime.parse(json['createdAt']),
-    updatedAt: DateTime.parse(json['updatedAt']),
+    createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
+    updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
     clients: json['clients'] != null
         ? List<Client>.from(json['clients'].map((x) => Client.fromJson(x)))
         : [],
@@ -41,9 +41,9 @@ class User {
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'username': username,
-    'email': email,
-    'password': password,
+    'username': username ?? "",
+    'email': email ?? "",
+    'password': password ?? "",
     'role': role,
     'emailVerified': emailVerified,
     'createdAt': createdAt.toIso8601String(),

@@ -1,51 +1,45 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
+import 'token_service.dart';
 
 class ApiService {
-  ApiService._();
+  final TokenService _tokenService = TokenService();
 
-  static final ApiService instance = ApiService._();
+  //  Headers dynamiques (toujours à jour)
+  Future<Map<String, String>> _headers() async {
+    final token = await _tokenService.getToken();
 
-  String? _token;
-
-  // 🔐 Set Token
-  void setToken(String token) {
-    _token = token;
-  }
-
-  // 🔑 Headers dynamiques
-  Map<String, String> get _headers {
     final headers = {
       "Content-Type": ApiConstants.contentType,
     };
 
-    if (_token != null) {
+    if (token != null) {
       headers[ApiConstants.authorization] =
-      "${ApiConstants.bearer} $_token";
+      "${ApiConstants.bearer} $token";
     }
 
     return headers;
   }
 
-  // 📥 GET
+  // GET
   Future<dynamic> get(String endpoint) async {
     final response = await http
         .get(
       Uri.parse("${ApiConstants.baseUrl}$endpoint"),
-      headers: _headers,
+      headers: await _headers(),
     )
         .timeout(ApiConstants.connectTimeout);
 
     return _handleResponse(response);
   }
 
-  // 📤 POST
+  //  POST
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
     final response = await http
         .post(
       Uri.parse("${ApiConstants.baseUrl}$endpoint"),
-      headers: _headers,
+      headers: await _headers(),
       body: jsonEncode(data),
     )
         .timeout(ApiConstants.connectTimeout);
@@ -53,12 +47,12 @@ class ApiService {
     return _handleResponse(response);
   }
 
-  // ✏ PUT
+  // PUT
   Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
     final response = await http
         .put(
       Uri.parse("${ApiConstants.baseUrl}$endpoint"),
-      headers: _headers,
+      headers: await _headers(),
       body: jsonEncode(data),
     )
         .timeout(ApiConstants.connectTimeout);
@@ -66,24 +60,26 @@ class ApiService {
     return _handleResponse(response);
   }
 
-  // ❌ DELETE
+  //  DELETE
   Future<dynamic> delete(String endpoint) async {
     final response = await http
         .delete(
       Uri.parse("${ApiConstants.baseUrl}$endpoint"),
-      headers: _headers,
+      headers: await _headers(),
     )
         .timeout(ApiConstants.connectTimeout);
 
     return _handleResponse(response);
   }
 
-  // 🔎 Gestion des réponses
+  //  Gestion des réponses
   dynamic _handleResponse(http.Response response) {
     final body = jsonDecode(response.body);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
+    } else if (response.statusCode == 401) {
+      throw Exception("Session expirée. Veuillez vous reconnecter.");
     } else {
       throw Exception(body["message"] ?? "Erreur API");
     }

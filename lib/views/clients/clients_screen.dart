@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:invoksa/view_models/clients/client_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
@@ -6,9 +7,25 @@ import 'widgets/client_card.dart';
 import 'widgets/clients_search_bar.dart';
 import '../../core/routes/app_routes.dart';
 
-class ClientsScreen extends StatelessWidget {
-  const ClientsScreen({Key? key}) : super(key: key);
+class ClientsScreen extends StatefulWidget {
+  ClientsScreen({super.key});
 
+  @override
+  State<ClientsScreen> createState() => _ClientsScreenState();
+}
+
+class _ClientsScreenState extends State<ClientsScreen> {
+  final ClientViewModel _clientViewModel = ClientViewModel();
+
+  @override
+  void initState(){
+    super.initState();
+    _clientViewModel.getMyClient();
+    _clientViewModel.addListener(() {
+      setState(() {});
+    });
+
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +43,7 @@ class ClientsScreen extends StatelessWidget {
                   children: [
                     const ClientsSearchBar(),
                     const SizedBox(height: AppSpacing.xl),
-                    _buildSectionHeader('TOUS LES CLIENTS (5)'),
+                    _buildSectionHeader('TOUS LES CLIENTS (${_clientViewModel.clients.length})'),
                     const SizedBox(height: AppSpacing.md),
                     _buildClientsList(),
                     const SizedBox(height: 80), // Fab space
@@ -108,50 +125,33 @@ class ClientsScreen extends StatelessWidget {
   }
 
   Widget _buildClientsList() {
-    return Column(
-      children: const [
-        ClientCard(
-          name: 'Jean Dupont',
-          amount: '2 450 €',
-          email: 'jean.dupont@techcorp.fr',
-          phone: '06 12 34 56 78',
-          imageUrl: 'https://i.pravatar.cc/150?img=11',
+    if (_clientViewModel.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_clientViewModel.errorMessage != null) {
+      return Center(child: Text(_clientViewModel.errorMessage!));
+    }
+
+    if (_clientViewModel.clients.isEmpty) {
+      return const Center(child: Text("Aucun client trouvé."));
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _clientViewModel.clients.length,
+      itemBuilder: (context, index) {
+        final client = _clientViewModel.clients[index];
+        return ClientCard(
+          name: client.name,
+          amount: "1000",
+          email: client.email,
+          phone: client.phone,
+          imageUrl: "https://i.pravatar.cc/150?img=5",
           status: ClientStatus.online,
-        ),
-        ClientCard(
-          name: 'Marie Leroy',
-          amount: '1 120 €',
-          email: 'm.leroy@design-studio.com',
-          phone: '07 88 45 21 00',
-          imageUrl: 'https://i.pravatar.cc/150?img=5',
-          status: ClientStatus.online,
-        ),
-        ClientCard(
-          name: 'Entreprise Artisanale SARL',
-          amount: '0 €',
-          email: 'contact@artisan-pro.fr',
-          phone: '01 45 67 89 10',
-          imageUrl: 'https://i.pravatar.cc/150?img=12',
-          status: ClientStatus.busy,
-        ),
-        ClientCard(
-          name: 'Thomas Bernard',
-          amount: '890 €',
-          email: 't.bernard@freelance.io',
-          phone: '06 55 44 33 22',
-          imageUrl: 'https://i.pravatar.cc/150?img=15',
-          status: ClientStatus.online,
-        ),
-        ClientCard(
-          name: 'Sophie Martin',
-          amount: '4 200 €',
-          email: 'sophie.m@solutions-web.fr',
-          phone: '06 00 11 22 33',
-          imageUrl: 'https://i.pravatar.cc/150?img=1',
-          status: ClientStatus.online,
-        ),
-      ],
+        );
+      },
     );
   }
-
 }

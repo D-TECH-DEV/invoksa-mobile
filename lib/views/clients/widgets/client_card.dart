@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:invoksa/views/shared/avatar_profil.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -16,14 +17,14 @@ class ClientCard extends StatelessWidget {
   final ClientStatus status;
 
   const ClientCard({
-    Key? key,
+    super.key,
     required this.name,
     required this.amount,
     required this.email,
     required this.phone,
     required this.imageUrl,
     required this.status,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -90,11 +91,12 @@ class ClientCard extends StatelessWidget {
   Widget _buildAvatar() {
     return Stack(
       children: [
-        CircleAvatar(
+        /*CircleAvatar(
           radius: 28,
           backgroundColor: AppColors.scaffoldBackground,
           backgroundImage: NetworkImage(imageUrl),
-        ),
+        ),*/
+        InitialsAvatar(fullName: name),
         Positioned(
           bottom: 2,
           right: 2,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:invoksa/view_models/splash/splash_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/routes/app_routes.dart';
 
@@ -10,6 +11,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final SplashViewModel _splashViewModel = SplashViewModel();
+
   @override
   void initState() {
     super.initState();
@@ -17,9 +20,10 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _navigateToLogin() {
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.login);
+        final String route = await _splashViewModel.getRoute();
+        Navigator.pushReplacementNamed(context, route);
       }
     });
   }

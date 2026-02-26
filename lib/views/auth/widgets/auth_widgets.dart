@@ -10,12 +10,15 @@ class AuthTextField extends StatelessWidget {
   final IconData icon;
   final bool isPassword;
 
+  final TextEditingController? controller;
+
   const AuthTextField({
     Key? key,
     required this.label,
     required this.hint,
     required this.icon,
     this.isPassword = false,
+    this.controller,
   }) : super(key: key);
 
   @override
@@ -33,6 +36,7 @@ class AuthTextField extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         TextField(
+          controller: controller,
           obscureText: isPassword,
           style: const TextStyle(color: Color(0xFF0D1B2A)),
           decoration: InputDecoration(

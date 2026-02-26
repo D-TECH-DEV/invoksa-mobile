@@ -17,7 +17,7 @@ class _MainLayoutState extends State<MainLayout> {
   final List<Widget> _screens = [
     const DashboardScreen(),
     const InvoiceListScreen(),
-    const ClientsScreen(),
+    ClientsScreen(),
   ];
 
   @override
