@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class TokenService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -8,7 +9,14 @@ class TokenService {
   }
 
   Future<String?> getToken() async {
-    return await _storage.read(key: 'jwt_token');
+    String? token = await _storage.read(key: 'jwt_token');
+
+    if (token != null && JwtDecoder.isExpired(token)) {
+      await deleteToken();
+      return null;
+    }
+
+    return token;
   }
 
   Future<void> deleteToken() async {

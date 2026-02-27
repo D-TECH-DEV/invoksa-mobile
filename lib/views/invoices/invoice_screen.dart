@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:invoksa/view_models/invoices/invoice_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
@@ -7,8 +8,30 @@ import 'widgets/invoice_filter_chip.dart';
 import 'widgets/invoice_list_item.dart';
 import '../../core/routes/app_routes.dart';
 
-class InvoiceListScreen extends StatelessWidget {
-  const InvoiceListScreen({Key? key}) : super(key: key);
+class InvoiceScreen extends StatefulWidget {
+  const InvoiceScreen({super.key});
+
+  @override
+  State<InvoiceScreen> createState() => _InvoiceScreenState();
+}
+
+class _InvoiceScreenState extends State<InvoiceScreen> {
+  final InvoiceViewmodel _invoiceViewmodel = InvoiceViewmodel();
+
+  @override
+  void dispose() {
+    _invoiceViewmodel.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    _invoiceViewmodel.getInvoices();
+    _invoiceViewmodel.addListener(() {
+      setState(() {});
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,16 +174,28 @@ class InvoiceListScreen extends StatelessWidget {
   }
 
   Widget _buildInvoicesList() {
-    return Column(
-      children: const [
-        InvoiceListItem(
-          invoiceId: 'INV-001',
-          clientName: 'Jean Dupont Consulting',
+    if(_invoiceViewmodel.errorMessage != null) {
+      return Center(child: Text(_invoiceViewmodel.errorMessage!),);
+    }
+
+    if(_invoiceViewmodel.invoices.isEmpty) {
+      return Center(child: const Text("Aucune facture !"),);
+    }
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _invoiceViewmodel.invoices.length,
+      itemBuilder: (context, index){
+        final invoice = _invoiceViewmodel.invoices[index];
+        return InvoiceListItem(
+          invoiceId: invoice.number,
+          clientName: invoice.client.name,
           date: '12 Oct 2023',
-          amount: '1 250,00 €',
-          status: InvoiceListStatus.paid,
-        ),
-        InvoiceListItem(
+          amount: '${invoice.total} F',
+          status: invoice.status,
+          invoice: invoice,
+        );
+        /*InvoiceListItem(
           invoiceId: 'INV-002',
           clientName: 'SARL TechFlow',
           date: '15 Oct 2023',
@@ -194,9 +229,8 @@ class InvoiceListScreen extends StatelessWidget {
           date: '25 Oct 2023',
           amount: '2 400,00 €',
           status: InvoiceListStatus.paid,
-        ),
-      ],
+        ),*/
+      },
     );
   }
-
 }

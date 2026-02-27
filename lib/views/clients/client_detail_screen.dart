@@ -6,7 +6,7 @@ import '../../core/constants/app_radius.dart';
 import 'widgets/client_detail_widgets.dart';
 
 class ClientDetailScreen extends StatelessWidget {
-  const ClientDetailScreen({Key? key}) : super(key: key);
+  const ClientDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

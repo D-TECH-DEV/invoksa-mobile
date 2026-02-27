@@ -1,12 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:invoksa/models/invoice.dart';
+import 'package:invoksa/view_models/invoices/invoice_detail_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_radius.dart';
 import 'widgets/invoice_detail_widgets.dart';
 
-class InvoiceDetailScreen extends StatelessWidget {
-  const InvoiceDetailScreen({Key? key}) : super(key: key);
+class InvoiceDetailScreen extends StatefulWidget {
+  final Invoice invoice;
+
+  //const InvoiceDetailScreen({super.key});
+  const InvoiceDetailScreen({super.key, required this.invoice});
+
+  @override
+  State<InvoiceDetailScreen> createState() => _InvoiceDetailScreenState();
+}
+
+class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
+  final InvoiceDetailViewModel _detailViewModel = InvoiceDetailViewModel();
+  late final Invoice invoice = widget.invoice;
+  @override
+  void initState() {
+    _detailViewModel.getInvoiceById(invoice.id!);
+    _detailViewModel.addListener(() {
+      setState(() {});
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +47,8 @@ class InvoiceDetailScreen extends StatelessWidget {
           icon: const Icon(Icons.chevron_left, color: AppColors.textPrimary, size: 30),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Facture #INV-2024-0012',
+        title:  Text(
+          'Facture #${invoice.number}',
           style: AppTextStyles.headingMedium,
         ),
         actions: [
@@ -42,30 +70,32 @@ class InvoiceDetailScreen extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
-            const InvoiceStatusCard(
-              status: 'En attente',
-              totalAmount: '4 800,00 €',
+            InvoiceStatusCard(
+              status: invoice.status,
+              totalAmount: '${invoice.total} F',
               dueDate: 'Échéance le 26 Octobre 2024',
             ),
             const SizedBox(height: AppSpacing.xl),
-            const ClientInfoSection(
-              name: 'Jean Dupont',
+            ClientInfoSection(
+              name: invoice.client.name,
               company: 'Dupont & Co Digital',
-              email: 'j.dupont@example.com',
-              phone: '+33 6 12 34 56 78',
-              address: '42 Rue de la Paix, 75002 Paris',
+              email: invoice.client.email,
+              phone: invoice.client.phone,
+              address: invoice.client.address??"Non spécifier",
               imageUrl: 'https://i.pravatar.cc/150?img=11',
             ),
             const SizedBox(height: AppSpacing.xl),
             InvoiceItemsTable(
-              items: [
-                InvoiceItemData(description: 'Design de Logo & Branding', quantity: 1, price: '1 200,00 €'),
-                InvoiceItemData(description: 'Développement Landing Page', quantity: 1, price: '2 500,00 €'),
-                InvoiceItemData(description: 'Maintenance Mensuelle (Oct)', quantity: 2, price: '300,00 €'),
-              ],
-              subtotal: '4 000,00 €',
-              tax: '800,00 €',
-              total: '4 800,00 €',
+              items: invoice.items!.map((item) {
+                return InvoiceItemData(
+                  description: item.description,   // ou item.productName selon ton modèle
+                  quantity: item.quantity,
+                  price: "${item.price.toStringAsFixed(2)} F",
+                );
+              }).toList(),
+              subtotal: "${invoice.total.toStringAsFixed(2)} F",
+              tax: "0 F",
+              total: "${invoice.total.toStringAsFixed(2)} F",
             ),
             const SizedBox(height: AppSpacing.lg),
             Row(
@@ -134,6 +164,11 @@ class InvoiceDetailScreen extends StatelessWidget {
           ],
         ),
       ),
+
+
     );
   }
+
+
+
 }

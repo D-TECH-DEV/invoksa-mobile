@@ -4,30 +4,37 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/routes/app_routes.dart';
+import '../../../models/invoice.dart';
 
-enum InvoiceListStatus { paid, pending, unpaid }
 
 class InvoiceListItem extends StatelessWidget {
+  final Invoice invoice;
+
   final String invoiceId;
   final String clientName;
   final String date;
   final String amount;
-  final InvoiceListStatus status;
+  final String status;
 
   const InvoiceListItem({
-    Key? key,
+    super.key,
+    required this.invoice,
     required this.invoiceId,
     required this.clientName,
     required this.date,
     required this.amount,
     required this.status,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, AppRoutes.invoiceDetail);
+        Navigator.pushNamed(
+          context,
+          AppRoutes.invoiceDetail,
+          arguments: invoice,
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -90,22 +97,33 @@ class InvoiceListItem extends StatelessWidget {
   }
 
   Widget _buildIcon() {
-    IconData iconData;
-    Color iconColor;
-    Color bgColor;
+    late IconData iconData;
+    late Color iconColor;
+    late Color bgColor;
 
     switch (status) {
-      case InvoiceListStatus.paid:
+      case "paid":
         iconData = Icons.south_west;
-        iconColor = AppColors.textPrimary;
+        iconColor = Colors.green;
         bgColor = AppColors.scaffoldBackground;
         break;
-      case InvoiceListStatus.pending:
-      case InvoiceListStatus.unpaid:
+
+      case "pending":
         iconData = Icons.north_east;
-        iconColor = status == InvoiceListStatus.unpaid ? Colors.red : AppColors.textPrimary;
-        bgColor = status == InvoiceListStatus.unpaid ? Colors.red.withOpacity(0.05) : AppColors.scaffoldBackground;
+        iconColor = Colors.orange;
+        bgColor = AppColors.scaffoldBackground;
         break;
+      case "unpaid":
+        iconData = Icons.north_east;
+        iconColor = Colors.red;
+        bgColor = AppColors.scaffoldBackground;
+        break;
+
+
+      default:
+        iconData = Icons.help_outline;
+        iconColor = AppColors.textPrimary;
+        bgColor = AppColors.scaffoldBackground;
     }
 
     return Container(
@@ -114,33 +132,41 @@ class InvoiceListItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.border.withOpacity(0.3)),
+        border: Border.all(
+          color: AppColors.border.withOpacity(0.3),
+        ),
       ),
       child: Icon(iconData, color: iconColor, size: 18),
     );
   }
-
   Widget _buildStatusBadge() {
     String text;
     Color? bgColor;
     Color textColor;
 
     switch (status) {
-      case InvoiceListStatus.paid:
+      case "paid":
         text = 'Payé';
         bgColor = null;
-        textColor = AppColors.textGrey;
+        textColor = Colors.green;
         break;
-      case InvoiceListStatus.pending:
+
+      case "pending":
         text = 'En attente';
         bgColor = null;
-        textColor = AppColors.textPrimary;
+        textColor = Colors.orange;
         break;
-      case InvoiceListStatus.unpaid:
+
+      case "unpaid":
         text = 'Non payé';
-        bgColor = const Color(0xFFE63946).withOpacity(0.7);
-        textColor = Colors.white;
+        bgColor = Colors.white;
+        textColor = Colors.red;
         break;
+
+      default:
+        text = 'Inconnu';
+        bgColor = Colors.grey.shade300;
+        textColor = Colors.black;
     }
 
     return Container(

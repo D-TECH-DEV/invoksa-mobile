@@ -15,7 +15,9 @@ class ApiConstants {
   static const String register = "/auth/register";
 
   static const String clients = "/clients/me";
+
   static const String invoices = "/invoices";
+
   static const String dashboard = "/dashboard";
 
   // Headers

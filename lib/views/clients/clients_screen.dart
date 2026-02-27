@@ -8,7 +8,7 @@ import 'widgets/clients_search_bar.dart';
 import '../../core/routes/app_routes.dart';
 
 class ClientsScreen extends StatefulWidget {
-  ClientsScreen({super.key});
+  const ClientsScreen({super.key});
 
   @override
   State<ClientsScreen> createState() => _ClientsScreenState();
@@ -19,11 +19,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   @override
   void initState(){
-    super.initState();
     _clientViewModel.getMyClient();
     _clientViewModel.addListener(() {
       setState(() {});
     });
+    super.initState();
 
 }
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/invoice.dart';
 import '../../views/splash/splash_screen.dart';
 import '../../views/auth/login_screen.dart';
 import '../../views/auth/register_screen.dart';
@@ -25,7 +26,10 @@ class AppRouter {
       case AppRoutes.clientCreate:
         return MaterialPageRoute(builder: (_) => const ClientCreateScreen());
       case AppRoutes.invoiceDetail:
-        return MaterialPageRoute(builder: (_) => const InvoiceDetailScreen());
+        final invoice = settings.arguments as Invoice;
+        return MaterialPageRoute(
+          builder: (_) => InvoiceDetailScreen(invoice: invoice),
+        );
       case AppRoutes.invoiceCreate:
         return MaterialPageRoute(builder: (_) => const InvoiceCreateScreen());
       default:

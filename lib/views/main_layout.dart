@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import 'dashboard/dashboard_screen.dart';
-import 'invoices/invoice_list_screen.dart';
+import 'invoices/invoice_screen.dart';
 import 'clients/clients_screen.dart';
 
 class MainLayout extends StatefulWidget {
@@ -16,7 +16,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> _screens = [
     const DashboardScreen(),
-    const InvoiceListScreen(),
+    const InvoiceScreen(),
     ClientsScreen(),
   ];
 
