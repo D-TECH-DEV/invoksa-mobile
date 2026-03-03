@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:invoksa/models/invoice.dart';
-import 'package:invoksa/view_models/invoices/invoice_detail_viewmodel.dart';
+import 'package:invoksa/view_models/invoice_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
@@ -18,12 +18,12 @@ class InvoiceDetailScreen extends StatefulWidget {
 }
 
 class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
-  final InvoiceDetailViewModel _detailViewModel = InvoiceDetailViewModel();
+  final InvoiceViewmodel _invoiceViewmodel = InvoiceViewmodel();
   late final Invoice invoice = widget.invoice;
   @override
   void initState() {
-    _detailViewModel.getInvoiceById(invoice.id!);
-    _detailViewModel.addListener(() {
+    _invoiceViewmodel.getInvoiceById(invoice.id!);
+    _invoiceViewmodel.addListener(() {
       setState(() {});
     });
     super.initState();
@@ -78,7 +78,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
             const SizedBox(height: AppSpacing.xl),
             ClientInfoSection(
               name: invoice.client.name,
-              company: 'Dupont & Co Digital',
+              company: 'Microsoft',
               email: invoice.client.email,
               phone: invoice.client.phone,
               address: invoice.client.address??"Non spécifier",

@@ -1,11 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:invoksa/view_models/client_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_radius.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 
-class ClientCreateScreen extends StatelessWidget {
-  const ClientCreateScreen({Key? key}) : super(key: key);
+class ClientCreateScreen extends StatefulWidget {
+   const ClientCreateScreen({super.key});
+
+  @override
+  State<ClientCreateScreen> createState() => _ClientCreateScreenState();
+}
+
+class _ClientCreateScreenState extends State<ClientCreateScreen> {
+  final ClientViewModel _clientViewModel = ClientViewModel();
+  TextEditingController nameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
+
+  @override
+  void dispose() {
+    super.dispose();
+    _clientViewModel.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,15 +57,17 @@ class ClientCreateScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.xl),
             _buildInputField(
               label: 'Nom complet ou Entreprise',
-              hint: 'Ex: Jean Dupont ou SARL Innov',
+              hint: 'Ex: Kouadio Emmanuel ou SARL Innov',
               icon: Icons.person_outline,
+              controller: nameController,
             ),
             const SizedBox(height: AppSpacing.lg),
             _buildInputField(
               label: 'Numéro de téléphone',
-              hint: '+33 6 00 00 00 00',
+              hint: '+225 00 00 00 00 00',
               icon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
+              controller: phoneController
             ),
             const SizedBox(height: AppSpacing.lg),
             _buildInputField(
@@ -56,6 +75,7 @@ class ClientCreateScreen extends StatelessWidget {
               hint: 'client@exemple.com',
               icon: Icons.mail_outline,
               keyboardType: TextInputType.emailAddress,
+              controller: emailController
             ),
             const SizedBox(height: AppSpacing.xl),
             _buildNoteSection(),
@@ -112,6 +132,8 @@ class ClientCreateScreen extends StatelessWidget {
     required String label,
     required String hint,
     required IconData icon,
+
+    required TextEditingController controller,
     TextInputType? keyboardType,
   }) {
     return Column(
@@ -127,6 +149,7 @@ class ClientCreateScreen extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         TextField(
+          controller: controller,
           keyboardType: keyboardType,
           style: const TextStyle(color: Color(0xFF0D1B2A)),
           decoration: InputDecoration(
@@ -155,43 +178,50 @@ class ClientCreateScreen extends StatelessWidget {
   }
 
   Widget _buildNoteSection() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadius.medium,
-        border: Border.all(color: AppColors.border, style: BorderStyle.none),
-      ),
-      child: CustomPaint(
-        painter: DashPainter(),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: const Text(
-            'Note : Vous pourrez modifier ces informations ultérieurement depuis le profil du client.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-              fontStyle: FontStyle.italic,
+    return AnimatedBuilder(
+      animation: _clientViewModel,
+      builder: (context, _) {
+        final hasError = _clientViewModel.errorMessage != null;
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: hasError ? Colors.red.withOpacity(0.05) : Colors.white,
+            borderRadius: AppRadius.medium,
+            border: Border.all(color: hasError ? Colors.red : AppColors.border, style: BorderStyle.none),
+          ),
+          child: CustomPaint(
+            painter: DashPainter(),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Text(
+                hasError ? _clientViewModel.errorMessage! : 'Note : Vous pourrez modifier ces informations ultérieurement depuis le profil du client.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: hasError ? Colors.red : AppColors.textSecondary,
+                  fontStyle: hasError ? FontStyle.normal : FontStyle.italic,
+                  fontWeight: hasError ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _buildSaveButton(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: AppColors.border)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
+    return AnimatedBuilder(
+      animation: _clientViewModel,
+      builder: (context, _) {
+        return Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: AppColors.border)),
+          ),
+          child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -202,29 +232,43 @@ class ClientCreateScreen extends StatelessWidget {
                 ),
                 elevation: 0,
               ),
-              onPressed: () {},
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.check, color: Color(0xFF0D1B2A)),
-                  SizedBox(width: AppSpacing.md),
-                  Text(
-                    'Enregistrer le Client',
-                    style: TextStyle(
-                      color: Color(0xFF0D1B2A),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
+              onPressed: _clientViewModel.isLoading
+                  ? null
+                  : () async {
+                final success =
+                await _clientViewModel.addClient(
+                    nameController.text.trim(),
+                    emailController.text.trim(),
+                    phoneController.text.trim()
+                );
+
+                if (success && mounted) {
+                  Navigator.pop(context);
+                }
+              },
+              child: _clientViewModel.isLoading
+                  ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFF0D1B2A),
+                ),
+              )
+                  :  Text(
+                'Enregistrer le Client',
+                style: TextStyle(
+                  color: Color(0xFF0D1B2A),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
-  }
-}
+  }}
 
 class DashPainter extends CustomPainter {
   @override
@@ -234,8 +278,6 @@ class DashPainter extends CustomPainter {
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
-    const double dashWidth = 5;
-    const double dashSpace = 3;
     final RRect rRect = RRect.fromLTRBR(0, 0, size.width, size.height, const Radius.circular(12));
     final Path path = Path()..addRRect(rRect);
 

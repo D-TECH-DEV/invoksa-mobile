@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:invoksa/views/auth/login_screen.dart';
-import 'package:invoksa/views/clients/clients_screen.dart';
-import 'package:invoksa/views/dashboard/dashboard_screen.dart';
-import 'package:invoksa/views/main_layout.dart';
-import 'package:invoksa/views/splash/splash_screen.dart';
+
 
 import 'core/routes/app_routes.dart';
 import 'core/routes/app_router.dart';

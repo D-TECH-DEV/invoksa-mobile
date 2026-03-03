@@ -16,6 +16,11 @@ class AppTextStyles {
     color: AppColors.textPrimary,
   );
 
+  static const TextStyle headingSmall = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w300,
+    color: AppColors.textPrimary,
+  );
   static const TextStyle body = TextStyle(
     fontSize: 16,
     color: AppColors.textPrimary,

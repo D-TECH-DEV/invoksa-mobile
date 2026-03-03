@@ -135,7 +135,7 @@ class ArticleEntryCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Prix Unitaire (€)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                    const Text('Prix Unitaire (F)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
                     const SizedBox(height: 4),
                     TextField(
                       keyboardType: TextInputType.number,
@@ -154,7 +154,7 @@ class ArticleEntryCard extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              'Total: ${(quantity * unitPrice).toStringAsFixed(2)} €',
+              'Total: ${(quantity * unitPrice).toStringAsFixed(2)} F',
               style: AppTextStyles.headingMedium.copyWith(fontSize: 14),
             ),
           ),
@@ -186,15 +186,15 @@ class InvoiceSummaryCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildSummaryRow('Sous-total', '${subtotal.toStringAsFixed(2)} €'),
+          _buildSummaryRow('Sous-total', '${subtotal.toStringAsFixed(2)} F'),
           const SizedBox(height: 8),
-          _buildSummaryRow('TVA (20%)', '${tax.toStringAsFixed(2)} €'),
+          _buildSummaryRow('TVA (20%)', '${tax.toStringAsFixed(2)} F'),
           const Divider(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Total Général', style: AppTextStyles.headingMedium),
-              Text('${total.toStringAsFixed(2)} €', style: AppTextStyles.headingLarge.copyWith(fontSize: 20)),
+              Text('${total.toStringAsFixed(2)} F', style: AppTextStyles.headingLarge.copyWith(fontSize: 20)),
             ],
           ),
         ],

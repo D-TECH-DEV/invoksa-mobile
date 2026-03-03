@@ -6,6 +6,10 @@ class InvoiceRepository {
 
   final ApiService _apiService = ApiService();
 
+  Future<Invoice> createInvoice(Invoice invoice) async {
+    final response = await _apiService.post(ApiConstants.invoices, invoice.toJson());
+    return Invoice.fromJson(response);
+  }
 
   Future<List<Invoice>> getInvoice() async {
     final response = await _apiService.get(ApiConstants.invoices);
@@ -26,4 +30,7 @@ class InvoiceRepository {
     final response = await _apiService.get("${ApiConstants.invoices}/$id");
     return Invoice.fromJson(response);
   }
+
+
+
 }

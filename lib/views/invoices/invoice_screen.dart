@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:invoksa/view_models/invoices/invoice_viewmodel.dart';
+import 'package:invoksa/view_models/invoice_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_radius.dart';
 import 'widgets/invoice_filter_chip.dart';
-import 'widgets/invoice_list_item.dart';
+import '../shared/invoice_list_item.dart';
 import '../../core/routes/app_routes.dart';
 
 class InvoiceScreen extends StatefulWidget {
@@ -188,48 +188,14 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       itemBuilder: (context, index){
         final invoice = _invoiceViewmodel.invoices[index];
         return InvoiceListItem(
-          invoiceId: invoice.number,
+          invoiceId: invoice.number!,
           clientName: invoice.client.name,
           date: '12 Oct 2023',
           amount: '${invoice.total} F',
           status: invoice.status,
           invoice: invoice,
         );
-        /*InvoiceListItem(
-          invoiceId: 'INV-002',
-          clientName: 'SARL TechFlow',
-          date: '15 Oct 2023',
-          amount: '840,00 €',
-          status: InvoiceListStatus.unpaid,
-        ),
-        InvoiceListItem(
-          invoiceId: 'INV-003',
-          clientName: 'Marie Lambert',
-          date: '18 Oct 2023',
-          amount: '3 100,00 €',
-          status: InvoiceListStatus.pending,
-        ),
-        InvoiceListItem(
-          invoiceId: 'INV-004',
-          clientName: 'Agence Créa Design',
-          date: '20 Oct 2023',
-          amount: '450,00 €',
-          status: InvoiceListStatus.paid,
-        ),
-        InvoiceListItem(
-          invoiceId: 'INV-005',
-          clientName: 'Boulangerie Le Bon Pain',
-          date: '22 Oct 2023',
-          amount: '125,50 €',
-          status: InvoiceListStatus.unpaid,
-        ),
-        InvoiceListItem(
-          invoiceId: 'INV-006',
-          clientName: 'Cabinet Médical Pasteur',
-          date: '25 Oct 2023',
-          amount: '2 400,00 €',
-          status: InvoiceListStatus.paid,
-        ),*/
+
       },
     );
   }

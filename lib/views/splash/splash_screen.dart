@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:invoksa/view_models/splash/splash_viewmodel.dart';
+import 'package:invoksa/view_models/splash_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/routes/app_routes.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

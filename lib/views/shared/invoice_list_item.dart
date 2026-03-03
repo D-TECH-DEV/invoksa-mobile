@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_radius.dart';
-import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/routes/app_routes.dart';
-import '../../../models/invoice.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_radius.dart';
+import '../../core/constants/app_spacing.dart';
+import '../../core/constants/app_text_styles.dart';
+import '../../core/routes/app_routes.dart';
+import '../../models/invoice.dart';
 
 
 class InvoiceListItem extends StatelessWidget {
   final Invoice invoice;
 
   final String invoiceId;
-  final String clientName;
+  final String? clientName;
   final String date;
   final String amount;
   final String status;
@@ -20,7 +20,7 @@ class InvoiceListItem extends StatelessWidget {
     super.key,
     required this.invoice,
     required this.invoiceId,
-    required this.clientName,
+    this.clientName,
     required this.date,
     required this.amount,
     required this.status,
@@ -63,14 +63,14 @@ class InvoiceListItem extends StatelessWidget {
                     invoiceId,
                     style: AppTextStyles.headingMedium.copyWith(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 2),
+                  /*const SizedBox(height: 2),
                   Text(
                     clientName,
                     style: AppTextStyles.body.copyWith(
                       fontSize: 13,
                       color: AppColors.textSecondary,
                     ),
-                  ),
+                  ),*/
                   const SizedBox(height: 2),
                   Text(
                     date,

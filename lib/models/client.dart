@@ -1,5 +1,4 @@
 import 'invoice.dart';
-import 'user.dart';
 
 class Client {
   final int? id;
@@ -7,7 +6,6 @@ class Client {
   final String email;
   final String phone;
   final String? address;
-  //final User? user;
   final DateTime createdAt;
   final DateTime updatedAt;
   final List<Invoice>? invoices;
@@ -18,7 +16,6 @@ class Client {
     required this.email,
     required this.phone,
     this.address,
-    //this.user,
     DateTime? createdAt,
     DateTime? updatedAt,
     this.invoices,
@@ -27,8 +24,8 @@ class Client {
 
   factory Client.fromJson(Map<String, dynamic> json) => Client(
     id: json['id'],
-    name: json['name'] ?? '',
-    email: json['email'] ?? '',
+    name: json['name'] ?? '----',
+    email: json['email'] ?? '-----',
     phone: json['phone'] ?? '',
     address: json['address'],
   );
@@ -42,6 +39,6 @@ class Client {
     //'user': user?.toJson(),
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
-    'invoices': invoices?.map((x) => x.toJson()).toList(),
+    //'invoices': invoices?.map((x) => x.toJson()).toList(),
   };
 }

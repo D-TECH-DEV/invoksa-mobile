@@ -1,6 +1,5 @@
 import 'client.dart';
 import 'invoice_item.dart';
-import 'user.dart';
 
 class Invoice {
   final int? id;
@@ -8,7 +7,7 @@ class Invoice {
   //final User? user;
   final double total;
   final String status;
-  final String number;
+  final String? number;
   final DateTime createdAt;
   final DateTime updatedAt;
   final List<InvoiceItem>? items;
@@ -23,7 +22,8 @@ class Invoice {
     DateTime? createdAt,
     DateTime? updatedAt,
     this.items,
-    this.deleted = 0, required this.number,
+    this.deleted = 0,
+     this.number,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
@@ -45,8 +45,9 @@ class Invoice {
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'client': client?.toJson(),
-    //'user': user?.toJson(),
+    'client': client.toJson(),
+    "clientId": client.id,
+    //'user': user?.toJon(),
     'total': total,
     'status': status,
     'createdAt': createdAt.toIso8601String(),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/routes/app_routes.dart';
-import '../../view_models/auth/login_viewmodel.dart';
+import '../../view_models/auth_viewmodel.dart';
 import 'widgets/auth_widgets.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
@@ -13,7 +13,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final LoginViewModel _viewModel = LoginViewModel();
+  final AuthViewModel _viewModel = AuthViewModel();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
 
   @override
   void dispose() {
@@ -100,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     label: 'User name',
                     hint: 'You Soft',
                     icon: Icons.mail_outline,
-                    controller: _viewModel.nameController,
+                    controller: _nameController,
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
@@ -109,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     label: 'Adresse Email',
                     hint: 'nom@exemple.com',
                     icon: Icons.mail_outline,
-                    controller: _viewModel.emailController,
+                    controller: _emailController,
                   ),
                   
                   const SizedBox(height: AppSpacing.lg),
@@ -119,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     hint: '••••••••',
                     icon: Icons.lock_outline,
                     isPassword: true,
-                    controller: _viewModel.passwordController,
+                    controller: _passwordController,
                   ),
                   
                   Align(
@@ -145,7 +149,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         text: 'Se connecter',
                         icon: Icons.arrow_forward_rounded,
                         onPressed: () async {
-                          final success = await _viewModel.login();
+                          final success = await _viewModel.login(
+                            _nameController.text.trim(),
+                            _emailController.text.trim(),
+                            _passwordController.text.trim(),
+                          );
                           if (success && mounted) {
                             Navigator.pushReplacementNamed(context, AppRoutes.main);
                           }

@@ -5,16 +5,19 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/routes/app_routes.dart';
+import '../../../models/client.dart';
 
 enum ClientStatus { online, offline, busy }
 
 class ClientCard extends StatelessWidget {
+  final Client client;
   final String name;
   final String amount;
   final String email;
   final String phone;
   final String imageUrl;
   final ClientStatus status;
+  //final Client client;
 
   const ClientCard({
     super.key,
@@ -24,13 +27,17 @@ class ClientCard extends StatelessWidget {
     required this.phone,
     required this.imageUrl,
     required this.status,
+     required this.client,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, AppRoutes.clientDetail);
+        Navigator.pushNamed(
+            context, AppRoutes.clientDetail,
+            arguments: client
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.md),

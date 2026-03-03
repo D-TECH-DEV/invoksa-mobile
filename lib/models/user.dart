@@ -1,5 +1,4 @@
 import 'client.dart';
-import 'invoice_item.dart';
 
 class User {
   final int? id;
@@ -41,9 +40,9 @@ class User {
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'username': username ?? "",
-    'email': email ?? "",
-    'password': password ?? "",
+    'username': username,
+    'email': email,
+    'password': password,
     'role': role,
     'emailVerified': emailVerified,
     'createdAt': createdAt.toIso8601String(),

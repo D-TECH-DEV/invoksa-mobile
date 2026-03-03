@@ -1,12 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:invoksa/view_models/client_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_radius.dart';
+import '../../core/routes/app_routes.dart';
+import '../../models/client.dart';
+import '../shared/invoice_list_item.dart';
 import 'widgets/client_detail_widgets.dart';
 
-class ClientDetailScreen extends StatelessWidget {
-  const ClientDetailScreen({super.key});
+class ClientDetailScreen extends StatefulWidget {
+  final Client client;
+  const ClientDetailScreen({
+    super.key,
+    required this.client
+  });
+
+  @override
+  State<ClientDetailScreen> createState() => _ClientDetailScreenState();
+}
+
+class _ClientDetailScreenState extends State<ClientDetailScreen> {
+  final ClientViewModel _clientViewModel = ClientViewModel();
+  late final Client client = widget.client;
+  @override
+  void dispose() {
+    super.dispose();
+    _clientViewModel.dispose();
+  }
+
+  @override
+  void initState() {
+    _clientViewModel.getClientInvoices(client.id!);
+    _clientViewModel.addListener(() {
+      setState(() {});
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,14 +67,14 @@ class ClientDetailScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const Padding(
+             Padding(
               padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
               child: ClientHeaderDetail(
-                name: 'Jean-Pierre Durand',
+                name: widget.client.name,
                 role: 'Directeur Marketing',
                 company: 'TechSolutions SA',
                 imageUrl: 'https://i.pravatar.cc/150?img=11',
-                isPremium: true,
+                isPremium: false,
               ),
             ),
             const Divider(height: 1, color: AppColors.border),
@@ -81,32 +111,7 @@ class ClientDetailScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  const ClientInvoiceItem(
-                    invoiceId: 'Facture 2024-042',
-                    date: '12 Mars 2024',
-                    amount: '1 450,00 €',
-                    status: 'Payé',
-                    isPaid: true,
-                  ),
-                  const ClientInvoiceItem(
-                    invoiceId: 'Facture 2024-045',
-                    date: '25 Mars 2024',
-                    amount: '890,50 €',
-                    status: 'En attente',
-                  ),
-                  const ClientInvoiceItem(
-                    invoiceId: 'Facture 2024-048',
-                    date: '02 Avril 2024',
-                    amount: '2 100,00 €',
-                    status: 'Payé',
-                    isPaid: true,
-                  ),
-                  const ClientInvoiceItem(
-                    invoiceId: 'Facture 2024-051',
-                    date: '15 Avril 2024',
-                    amount: '320,00 €',
-                    status: 'En attente',
-                  ),
+                  _buildInvoicesList(),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -115,7 +120,9 @@ class ClientDetailScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.pushNamed(context, AppRoutes.invoiceCreate);
+        },
         backgroundColor: AppColors.accent,
         elevation: 4,
         child: const Icon(Icons.add, color: Colors.white, size: 30),
@@ -145,6 +152,36 @@ class ClientDetailScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInvoicesList() {
+    final invoices = _clientViewModel.invoices;
+
+    if (invoices.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(
+          child: Text("Aucune facture pour ce client"),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: invoices.length,
+      itemBuilder: (context, index) {
+        final invoice = invoices[index];
+
+        return InvoiceListItem(
+          invoiceId: invoice.number! ,
+          date: '12 Oct 2023',
+          amount: '${invoice.total} F',
+          status: invoice.status,
+          invoice: invoice,
+        );
+      },
     );
   }
 }

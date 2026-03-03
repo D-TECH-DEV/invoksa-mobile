@@ -1,12 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:invoksa/core/constants/api_constants.dart';
-import 'package:invoksa/core/services/api_service.dart';
 import '../core/services/token_service.dart';
 import '../models/user.dart';
 
 class AuthRepository {
-  final ApiService _apiService = ApiService();
   final TokenService _tokenService = TokenService();
 
   Future<Map<String, dynamic>> login(String username, String email, String password) async {

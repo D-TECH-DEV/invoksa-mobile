@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:invoksa/models/client.dart';
 import '../../models/invoice.dart';
 import '../../views/splash/splash_screen.dart';
 import '../../views/auth/login_screen.dart';
@@ -22,9 +23,12 @@ class AppRouter {
       case AppRoutes.main:
         return MaterialPageRoute(builder: (_) => const MainLayout());
       case AppRoutes.clientDetail:
-        return MaterialPageRoute(builder: (_) => const ClientDetailScreen());
+        final client = settings.arguments as Client;
+        return MaterialPageRoute(
+            builder: (_) => ClientDetailScreen(client: client)
+        );
       case AppRoutes.clientCreate:
-        return MaterialPageRoute(builder: (_) => const ClientCreateScreen());
+        return MaterialPageRoute(builder: (_) => ClientCreateScreen());
       case AppRoutes.invoiceDetail:
         final invoice = settings.arguments as Invoice;
         return MaterialPageRoute(

@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-import '../../core/routes/app_routes.dart';
-import '../../view_models/auth/register_viewmodel.dart';
+import 'package:invoksa/view_models/auth_viewmodel.dart';
 import 'widgets/auth_widgets.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+  const RegisterScreen({super.key});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final RegisterViewModel _viewModel = RegisterViewModel();
+  final AuthViewModel _viewModel = AuthViewModel();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -93,7 +95,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     label: 'Nom complet',
                     hint: 'Jean Dupont',
                     icon: Icons.person_outline,
-                    controller: _viewModel.nameController,
+                    controller: _nameController,
                   ),
                   
                   const SizedBox(height: AppSpacing.lg),
@@ -102,7 +104,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     label: 'Adresse Email',
                     hint: 'nom@exemple.com',
                     icon: Icons.mail_outline,
-                    controller: _viewModel.emailController,
+                    controller: _emailController,
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
@@ -110,7 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     label: 'Adresse Email',
                     hint: 'nom@exemple.com',
                     icon: Icons.mail_outline,
-                    controller: _viewModel.emailController,
+                    controller: _emailController,
                   ),
                   
                   const SizedBox(height: AppSpacing.lg),
@@ -120,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     hint: '••••••••',
                     icon: Icons.lock_outline,
                     isPassword: true,
-                    controller: _viewModel.passwordController,
+                    controller: _passwordController,
                   ),
                   
                   const SizedBox(height: 30),
@@ -130,7 +132,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     : PrimaryAuthButton(
                         text: "S'inscrire",
                         onPressed: () async {
-                          final success = await _viewModel.register();
+                          final success = await _viewModel.register(
+                            _nameController.text.trim(),
+                            _emailController.text.trim(),
+                            _passwordController.text.trim(),
+                          );
                           if (success && mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text("Compte créé avec succès ! Connectez-vous.")),

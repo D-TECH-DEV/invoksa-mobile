@@ -10,11 +10,11 @@ class InvoiceStatusCard extends StatelessWidget {
   final String dueDate;
 
   const InvoiceStatusCard({
-    Key? key,
+    super.key,
     required this.status,
     required this.totalAmount,
     required this.dueDate,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -60,14 +60,14 @@ class ClientInfoSection extends StatelessWidget {
   final String imageUrl;
 
   const ClientInfoSection({
-    Key? key,
+    super.key,
     required this.name,
     required this.company,
     required this.email,
     required this.phone,
     required this.address,
     required this.imageUrl,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -140,12 +140,12 @@ class InvoiceItemsTable extends StatelessWidget {
   final String total;
 
   const InvoiceItemsTable({
-    Key? key,
+    super.key,
     required this.items,
     required this.subtotal,
     required this.tax,
     required this.total,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

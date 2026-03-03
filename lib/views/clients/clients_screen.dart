@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:invoksa/view_models/clients/client_viewmodel.dart';
+import 'package:invoksa/view_models/client_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
@@ -19,7 +19,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   @override
   void initState(){
-    _clientViewModel.getMyClient();
+    _clientViewModel.loadClients();
     _clientViewModel.addListener(() {
       setState(() {});
     });
@@ -55,8 +55,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, AppRoutes.clientCreate);
+        onPressed: () async {
+          await Navigator.pushNamed(context, AppRoutes.clientCreate);
+          _clientViewModel.loadClients();
         },
         backgroundColor: AppColors.primary,
         elevation: 4,
@@ -150,6 +151,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
           phone: client.phone,
           imageUrl: "https://i.pravatar.cc/150?img=5",
           status: ClientStatus.online,
+         client: client,
         );
       },
     );
