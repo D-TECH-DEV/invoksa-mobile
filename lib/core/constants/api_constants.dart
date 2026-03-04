@@ -2,8 +2,7 @@ class ApiConstants {
   //ApiConstants._();
 
   // Base URL
-  static const String baseUrl = "http://10.66.49.206:8080/api";
-  //static const String baseUrl = "http://127.0.0.1:8080/api";
+  static const String baseUrl = "http://10.200.130.206:8080/api";
 
   // 10.0.2.2 = localhost Android Emulator
   // En production → https://api.invoksa.com

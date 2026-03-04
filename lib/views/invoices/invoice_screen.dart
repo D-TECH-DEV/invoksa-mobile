@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_radius.dart';
+import '../shared/section_header.dart';
 import 'widgets/invoice_filter_chip.dart';
 import '../shared/invoice_list_item.dart';
 import '../../core/routes/app_routes.dart';
@@ -17,6 +18,11 @@ class InvoiceScreen extends StatefulWidget {
 
 class _InvoiceScreenState extends State<InvoiceScreen> {
   final InvoiceViewmodel _invoiceViewmodel = InvoiceViewmodel();
+
+  String selectedFilter = "all";
+  bool isSearchBarVisible = false;
+  String sortFilter = "Plus récent";
+  bool showSortFilters = false;
 
   @override
   void dispose() {
@@ -48,11 +54,21 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSearchBar(),
-                    const SizedBox(height: AppSpacing.lg),
+                    isSearchBarVisible ?
+                    _buildSearchBar() : const SizedBox(),
+                    isSearchBarVisible ?
+                    const SizedBox(height: AppSpacing.lg) : const SizedBox(),
                     _buildFilters(),
                     const SizedBox(height: AppSpacing.xl),
-                    _buildSectionHeader('RÉCENTES', 'Voir tout'),
+                    SectionHeader(
+                      title: 'Les facture (${_invoiceViewmodel.invoices.length})',
+                      actionText: sortFilter,
+                      onTap: () {
+                        setState(() {
+                          showSortFilters = !showSortFilters;
+                        });
+                      },
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     _buildInvoicesList(),
                     const SizedBox(height: AppSpacing.xl),
@@ -95,10 +111,23 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
             'Factures',
             style: AppTextStyles.headingLarge,
           ),
-          IconButton(
-            icon: const Icon(Icons.filter_alt_outlined, color: AppColors.textPrimary),
-            onPressed: () {},
-          ),
+          Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.search, color: AppColors.textPrimary),
+              onPressed: () {
+                setState(() {
+                  isSearchBarVisible= !isSearchBarVisible;
+                });
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.settings, color: AppColors.textPrimary),
+              onPressed: () {},
+            ),
+          ],
+        )
+
         ],
       ),
     );
@@ -134,44 +163,54 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          InvoiceFilterChip(label: 'Toutes', isSelected: true, onTap: () {}),
+          InvoiceFilterChip(
+            label: 'Toutes',
+            isSelected: selectedFilter == "all",
+            onTap: () {
+              setState(() {
+                selectedFilter = "all";
+              });
+              _invoiceViewmodel.filterInvoices("all");
+            },
+          ),
           const SizedBox(width: AppSpacing.sm),
-          InvoiceFilterChip(label: 'Payées', isSelected: false, onTap: () {}),
+          InvoiceFilterChip(
+            label: 'Payées',
+            isSelected: selectedFilter == "paid",
+            onTap: () {
+              setState(() {
+                selectedFilter = "paid";
+              });
+              _invoiceViewmodel.filterInvoices("paid");
+            },
+          ),
           const SizedBox(width: AppSpacing.sm),
-          InvoiceFilterChip(label: 'En attente', isSelected: false, onTap: () {}),
+          InvoiceFilterChip(
+            label: 'En attente',
+            isSelected: selectedFilter == "pending",
+            onTap: () {
+              setState(() {
+                selectedFilter = "pending";
+              });
+              _invoiceViewmodel.filterInvoices("pending");
+            },
+          ),
           const SizedBox(width: AppSpacing.sm),
-          InvoiceFilterChip(label: 'Non payées', isSelected: false, onTap: () {}),
+          InvoiceFilterChip(
+            label: 'Non payées',
+            isSelected: selectedFilter == "unpaid",
+            onTap: () {
+              setState(() {
+                selectedFilter = "unpaid";
+              });
+              _invoiceViewmodel.filterInvoices("unpaid");
+            },
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, String actionText) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: AppTextStyles.caption.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        GestureDetector(
-          onTap: () {},
-          child: Text(
-            actionText,
-            style: AppTextStyles.body.copyWith(
-              color: const Color(0xFF2EC4B6),
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildInvoicesList() {
     if(_invoiceViewmodel.errorMessage != null) {

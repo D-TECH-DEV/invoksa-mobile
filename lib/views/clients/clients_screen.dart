@@ -3,6 +3,7 @@ import 'package:invoksa/view_models/client_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../shared/section_header.dart';
 import 'widgets/client_card.dart';
 import 'widgets/clients_search_bar.dart';
 import '../../core/routes/app_routes.dart';
@@ -16,6 +17,10 @@ class ClientsScreen extends StatefulWidget {
 
 class _ClientsScreenState extends State<ClientsScreen> {
   final ClientViewModel _clientViewModel = ClientViewModel();
+
+  bool isSearchBarVisible = false;
+  String sortFilter = "Plus récent";
+  bool showSortFilters = false;
 
   @override
   void initState(){
@@ -41,9 +46,19 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const ClientsSearchBar(),
-                    const SizedBox(height: AppSpacing.xl),
-                    _buildSectionHeader('TOUS LES CLIENTS (${_clientViewModel.clients.length})'),
+                    isSearchBarVisible ?
+                    const ClientsSearchBar() : const SizedBox(),
+                    isSearchBarVisible ?
+                    const SizedBox(height: AppSpacing.xl): const SizedBox(),
+                    SectionHeader(
+                      title: 'TOUS LES CLIENTS (${_clientViewModel.clients.length})',
+                      actionText: sortFilter,
+                      onTap: () {
+                        setState(() {
+                          showSortFilters = !showSortFilters;
+                        });
+                      },
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     _buildClientsList(),
                     const SizedBox(height: 80), // Fab space
@@ -81,10 +96,14 @@ class _ClientsScreenState extends State<ClientsScreen> {
             children: [
               IconButton(
                 icon: const Icon(Icons.search, color: AppColors.textPrimary),
-                onPressed: () {},
+                onPressed: () {
+                  setState(() {
+                    isSearchBarVisible= !isSearchBarVisible;
+                  });
+                },
               ),
               IconButton(
-                icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
+                icon: const Icon(Icons.settings, color: AppColors.textPrimary),
                 onPressed: () {},
               ),
             ],
@@ -94,36 +113,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          title,
-          style: AppTextStyles.caption.copyWith(
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.2,
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.accent.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            'Récent',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.accent,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildClientsList() {
     if (_clientViewModel.isLoading) {

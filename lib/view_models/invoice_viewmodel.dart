@@ -13,6 +13,7 @@ class InvoiceViewmodel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
+  List<Invoice> allInvoices = [];
   List<Invoice> invoices = [];
   List<Client> clients = [];
   List<InvoiceItem> invoiceItemsAdd = [];
@@ -26,7 +27,7 @@ class InvoiceViewmodel extends ChangeNotifier {
 
       final newInvoice = await _invoiceServices.createInvoice(client, invoiceItems);
       //invoices.insert(0, newInvoice);
-      loadClients();
+      await loadClients();
 
       isLoading = false;
       errorMessage = null;
@@ -42,25 +43,23 @@ class InvoiceViewmodel extends ChangeNotifier {
   }
 
   Future<bool> getInvoices() async {
-      try {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
 
-        isLoading = true;
-        errorMessage = null;
-        notifyListeners();
+      allInvoices = await _invoiceRepository.getInvoice();
+      invoices = List.from(allInvoices); // copie
 
-        invoices = await _invoiceRepository.getInvoice();
-
-        isLoading = false;
-        errorMessage = null;
-        notifyListeners();
-      } catch (e) {
-        errorMessage = e.toString().replaceAll("", "");
-        isLoading = false;
-        notifyListeners();
-      }
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      isLoading = false;
+      errorMessage = e.toString();
+      notifyListeners();
       return false;
-
-
+    }
   }
 
   Future<bool> loadClients() async {
@@ -82,9 +81,6 @@ class InvoiceViewmodel extends ChangeNotifier {
     }
   }
 
-
-
-
   Future<bool> getInvoiceById(int id)  async{
     try {
       isLoading = true;
@@ -105,4 +101,29 @@ class InvoiceViewmodel extends ChangeNotifier {
     }
 
   }
-}
+
+  Future<bool> filterInvoices(String filter) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+
+      if (filter.toLowerCase() == "all") {
+        invoices = List.from(allInvoices);
+      } else {
+        invoices = allInvoices
+            .where((item) =>
+        item.status.toLowerCase() == filter.toLowerCase())
+            .toList();
+      }
+
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      isLoading = false;
+      errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }}
+
