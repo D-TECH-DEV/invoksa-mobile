@@ -23,9 +23,11 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   bool isSearchBarVisible = false;
   String sortFilter = "Plus récent";
   bool showSortFilters = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void dispose() {
+    _searchController.dispose();
     _invoiceViewmodel.dispose();
     super.dispose();
   }
@@ -113,11 +115,15 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           ),
           Row(
           children: [
-            IconButton(
+              IconButton(
               icon: const Icon(Icons.search, color: AppColors.textPrimary),
               onPressed: () {
                 setState(() {
-                  isSearchBarVisible= !isSearchBarVisible;
+                  isSearchBarVisible = !isSearchBarVisible;
+                  if (!isSearchBarVisible) {
+                    _searchController.clear();
+                    _invoiceViewmodel.clearSearch();
+                  }
                 });
               },
             ),
@@ -146,12 +152,31 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
+              controller: _searchController,
+              onChanged: _invoiceViewmodel.searchInvoices,
               decoration: InputDecoration(
                 hintText: 'Rechercher une facture ou un client...',
                 hintStyle: AppTextStyles.caption.copyWith(fontSize: 14),
                 border: InputBorder.none,
               ),
             ),
+          ),
+          // Bouton clear : visible uniquement quand le TextField contient du texte
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _searchController,
+            builder: (_, value, __) {
+              if (value.text.isEmpty) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.close, size: 18,
+                    color: AppColors.textSecondary),
+                onPressed: () {
+                  _searchController.clear();
+                  _invoiceViewmodel.clearSearch();
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              );
+            },
           ),
         ],
       ),

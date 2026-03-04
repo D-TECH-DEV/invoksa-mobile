@@ -19,6 +19,12 @@ class InvoiceViewmodel extends ChangeNotifier {
   List<InvoiceItem> invoiceItemsAdd = [];
   Invoice? invoice;
 
+  /// Texte saisi par l'utilisateur dans la barre de recherche
+  String searchQuery = '';
+
+  /// Filtre de statut actif ("all", "paid", "pending", "unpaid")
+  String _activeStatusFilter = 'all';
+
   Future <bool> addInvoice(Map<String, dynamic> client, List<Map<String, dynamic>> invoiceItems) async {
     try {
       isLoading = true;
@@ -49,7 +55,7 @@ class InvoiceViewmodel extends ChangeNotifier {
       notifyListeners();
 
       allInvoices = await _invoiceRepository.getInvoice();
-      invoices = List.from(allInvoices); // copie
+      invoices = List.from(allInvoices);
 
       isLoading = false;
       notifyListeners();
@@ -102,28 +108,49 @@ class InvoiceViewmodel extends ChangeNotifier {
 
   }
 
-  Future<bool> filterInvoices(String filter) async {
-    try {
-      isLoading = true;
-      notifyListeners();
+  /// Filtre la liste par statut. Compatible avec la recherche textuelle.
+  void filterInvoices(String filter) {
+    _activeStatusFilter = filter.toLowerCase();
+    _applyFilters();
+  }
 
-      if (filter.toLowerCase() == "all") {
-        invoices = List.from(allInvoices);
-      } else {
-        invoices = allInvoices
-            .where((item) =>
-        item.status.toLowerCase() == filter.toLowerCase())
-            .toList();
-      }
+  /// Filtre la liste en temps réel selon la saisie utilisateur.
+  /// Recherche dans le numéro de facture et le nom du client.
+  void searchInvoices(String query) {
+    searchQuery = query.trim().toLowerCase();
+    _applyFilters();
+  }
 
-      isLoading = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      isLoading = false;
-      errorMessage = e.toString();
-      notifyListeners();
-      return false;
+  /// Réinitialise la recherche textuelle et restaure la liste filtrée par statut.
+  void clearSearch() {
+    searchQuery = '';
+    _applyFilters();
+  }
+
+  /// Point unique de filtrage : combine statut + recherche textuelle.
+  void _applyFilters() {
+    List<Invoice> result = allInvoices;
+
+    // Filtre par statut
+    if (_activeStatusFilter != 'all') {
+      result = result
+          .where((inv) => inv.status.toLowerCase() == _activeStatusFilter)
+          .toList();
     }
-  }}
+
+    // Filtre par texte (numéro de facture ou nom du client)
+    if (searchQuery.isNotEmpty) {
+      result = result.where((inv) {
+        final matchNumber =
+            (inv.number ?? '').toLowerCase().contains(searchQuery);
+        final matchClient =
+            inv.client.name.toLowerCase().contains(searchQuery);
+        return matchNumber || matchClient;
+      }).toList();
+    }
+
+    invoices = result;
+    notifyListeners();
+  }
+}
 

@@ -63,14 +63,14 @@ class InvoiceListItem extends StatelessWidget {
                     invoiceId,
                     style: AppTextStyles.headingMedium.copyWith(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
-                  /*const SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    clientName,
+                    clientName!,
                     style: AppTextStyles.body.copyWith(
                       fontSize: 13,
                       color: AppColors.textSecondary,
                     ),
-                  ),*/
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     date,

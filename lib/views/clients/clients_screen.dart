@@ -17,20 +17,28 @@ class ClientsScreen extends StatefulWidget {
 
 class _ClientsScreenState extends State<ClientsScreen> {
   final ClientViewModel _clientViewModel = ClientViewModel();
+  // Controller créé ici → survive aux rebuilds causés par notifyListeners()
+  final TextEditingController _searchController = TextEditingController();
 
   bool isSearchBarVisible = false;
   String sortFilter = "Plus récent";
   bool showSortFilters = false;
 
   @override
-  void initState(){
+  void initState() {
+    super.initState();
     _clientViewModel.loadClients();
     _clientViewModel.addListener(() {
-      setState(() {});
+      if (mounted) setState(() {});
     });
-    super.initState();
+  }
 
-}
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _clientViewModel.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,8 +54,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    isSearchBarVisible ?
-                    const ClientsSearchBar() : const SizedBox(),
+                    isSearchBarVisible
+                        ? ClientsSearchBar(
+                            controller: _searchController,
+                            onChanged: _clientViewModel.searchClients,
+                            onClear: _clientViewModel.clearSearch,
+                          )
+                        : const SizedBox(),
                     isSearchBarVisible ?
                     const SizedBox(height: AppSpacing.xl): const SizedBox(),
                     SectionHeader(
@@ -98,7 +111,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 icon: const Icon(Icons.search, color: AppColors.textPrimary),
                 onPressed: () {
                   setState(() {
-                    isSearchBarVisible= !isSearchBarVisible;
+                    isSearchBarVisible = !isSearchBarVisible;
+                    if (!isSearchBarVisible) {
+                      _searchController.clear();
+                      _clientViewModel.clearSearch();
+                    }
                   });
                 },
               ),
