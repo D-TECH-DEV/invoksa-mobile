@@ -31,6 +31,13 @@ class InvoiceRepository {
     return Invoice.fromJson(response);
   }
 
+  Future<Invoice> getInvoiceAi (
+      String description, String lang, String devise) async {
+    final response = await _apiService.get(
+        "${ApiConstants.invoiceAi}?description=$description&lang=$lang&devise=$devise"
+    );
+    return Invoice.fromJson(response);
+  }
 
 
 }

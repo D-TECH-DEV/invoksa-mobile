@@ -10,6 +10,7 @@ class InvoiceServices {
       //Invoice invoice,
       Map<String, dynamic> clientSelected,
       List<Map<String, dynamic>> items,
+      int statusCode,
       ) async {
 
     List<InvoiceItem> invoiceItems = items
@@ -21,7 +22,7 @@ class InvoiceServices {
     Invoice newInvoice = Invoice(
       //number: invoice.number,
       client: client,
-      //status: invoice.status,
+      statusCode: statusCode,
       items: invoiceItems,
     );
 
@@ -29,5 +30,12 @@ class InvoiceServices {
     await _invoiceRepository.createInvoice(newInvoice);
 
     return invoiceCreated;
+  }
+
+  Future<Invoice> sendInvoiceAi(String description) async {
+    String lang = "fr";
+    String devise = "F CFA";
+    Invoice invoice = await _invoiceRepository.getInvoiceAi(description, lang, devise);
+    return invoice;
   }
 }

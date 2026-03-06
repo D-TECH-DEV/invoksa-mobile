@@ -18,6 +18,7 @@ class InvoiceViewmodel extends ChangeNotifier {
   List<Client> clients = [];
   List<InvoiceItem> invoiceItemsAdd = [];
   Invoice? invoice;
+  Invoice? invoiceAi;
 
   /// Texte saisi par l'utilisateur dans la barre de recherche
   String searchQuery = '';
@@ -31,7 +32,7 @@ class InvoiceViewmodel extends ChangeNotifier {
       errorMessage = null;
       notifyListeners();
 
-      final newInvoice = await _invoiceServices.createInvoice(client, invoiceItems);
+      final newInvoice = await _invoiceServices.createInvoice(client, invoiceItems, 500);
       //invoices.insert(0, newInvoice);
       await loadClients();
 
@@ -108,6 +109,31 @@ class InvoiceViewmodel extends ChangeNotifier {
 
   }
 
+  Future<bool> loadInvoiceAi(String description) async {
+    try {
+      if(description=="") {
+        return false;
+      }
+
+      isLoading= true;
+      errorMessage = null;
+      notifyListeners();
+
+      invoiceAi = await _invoiceServices.sendInvoiceAi(description);
+
+      isLoading= false;
+      errorMessage = null;
+      notifyListeners();
+      return true;
+    } catch(e) {
+      isLoading = false;
+      errorMessage = e.toString().replaceAll("E", "");
+      notifyListeners();
+      return false;
+    }
+  }
+
+
   /// Filtre la liste par statut. Compatible avec la recherche textuelle.
   void filterInvoices(String filter) {
     _activeStatusFilter = filter.toLowerCase();
@@ -144,7 +170,7 @@ class InvoiceViewmodel extends ChangeNotifier {
         final matchNumber =
             (inv.number ?? '').toLowerCase().contains(searchQuery);
         final matchClient =
-            inv.client.name.toLowerCase().contains(searchQuery);
+            (inv.client?.name ?? '').toLowerCase().contains(searchQuery);
         return matchNumber || matchClient;
       }).toList();
     }
@@ -152,5 +178,7 @@ class InvoiceViewmodel extends ChangeNotifier {
     invoices = result;
     notifyListeners();
   }
+
+
 }
 

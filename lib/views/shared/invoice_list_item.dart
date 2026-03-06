@@ -65,7 +65,7 @@ class InvoiceListItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    clientName!,
+                    clientName ?? "Client inconnu",
                     style: AppTextStyles.body.copyWith(
                       fontSize: 13,
                       color: AppColors.textSecondary,

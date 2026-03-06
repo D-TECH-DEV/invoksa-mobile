@@ -175,7 +175,8 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
         final invoice = invoices[index];
 
         return InvoiceListItem(
-          invoiceId: invoice.number! ,
+          invoiceId: invoice.number ?? "______",
+          clientName: widget.client.name,
           date: '12 Oct 2023',
           amount: '${invoice.total} F',
           status: invoice.status,

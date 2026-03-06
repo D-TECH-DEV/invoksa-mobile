@@ -77,16 +77,16 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
             ),
             const SizedBox(height: AppSpacing.xl),
             ClientInfoSection(
-              name: invoice.client.name,
+              name: invoice.client?.name ?? "Client inconnu",
               company: 'Microsoft',
-              email: invoice.client.email,
-              phone: invoice.client.phone,
-              address: invoice.client.address??"Non spécifier",
+              email: invoice.client?.email ?? "Email inconnu",
+              phone: invoice.client?.phone ?? "Téléphone inconnu",
+              address: invoice.client?.address??"Non spécifier",
               imageUrl: 'https://i.pravatar.cc/150?img=11',
             ),
             const SizedBox(height: AppSpacing.xl),
             InvoiceItemsTable(
-              items: invoice.items!.map((item) {
+              items: (invoice.items ?? []).map((item) {
                 return InvoiceItemData(
                   description: item.description,   // ou item.productName selon ton modèle
                   quantity: item.quantity,

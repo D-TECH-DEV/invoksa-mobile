@@ -252,9 +252,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       itemBuilder: (context, index){
         final invoice = _invoiceViewmodel.invoices[index];
         return InvoiceListItem(
-          invoiceId: invoice.number!,
-          clientName: invoice.client.name,
-          date: '12 Oct 2023',
+          invoiceId: invoice.number ?? "______",
+          clientName: invoice.client?.name ?? "Client inconnu",
+          date: invoice.formattedDate,
           amount: '${invoice.total} F',
           status: invoice.status,
           invoice: invoice,

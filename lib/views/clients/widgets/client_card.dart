@@ -32,64 +32,132 @@ class ClientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(
-            context, AppRoutes.clientDetail,
-            arguments: client
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.md),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: AppColors.background,
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: AppRadius.medium,
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildAvatar(),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              AppRoutes.clientDetail,
+              arguments: client,
+            );
+          },
+          child: Ink(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: AppRadius.medium,
+              border: Border.all(
+                color: AppColors.border.withOpacity(0.5),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                _buildAvatar(),
+                const SizedBox(width: AppSpacing.md),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: Text(
-                          name,
-                          style: AppTextStyles.headingMedium.copyWith(fontSize: 16),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+
+                      /// Ligne 1 : Nom + Montant
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              name,
+                              style: AppTextStyles.headingMedium
+                                  .copyWith(fontSize: 15),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.scaffoldBackground,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              amount,
+                              style: AppTextStyles.caption.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        amount,
-                        style: AppTextStyles.body.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
-                        ),
+
+                      const SizedBox(height: 4),
+
+                      /// Ligne 2 : Email + Téléphone sur UNE ligne
+                      Row(
+                        children: [
+                          Icon(Icons.mail_outline,
+                              size: 14,
+                              color: AppColors.textSecondary),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              email,
+                              style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+
+                          const SizedBox(width: 10),
+
+                          Icon(Icons.phone_outlined,
+                              size: 14,
+                              color: AppColors.textSecondary),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              phone,
+                              style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  _buildContactInfo(Icons.mail_outline, email),
-                  const SizedBox(height: 4),
-                  _buildContactInfo(Icons.phone_outlined, phone),
-                ],
-              ),
+                ),
+
+                const SizedBox(width: AppSpacing.sm),
+
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.textSecondary.withOpacity(0.5),
+                ),
+              ],
             ),
-            const SizedBox(width: AppSpacing.sm),
-            const Icon(
-              Icons.chevron_right,
-              color: AppColors.textSecondary,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -98,22 +166,36 @@ class ClientCard extends StatelessWidget {
   Widget _buildAvatar() {
     return Stack(
       children: [
-        /*CircleAvatar(
-          radius: 28,
-          backgroundColor: AppColors.scaffoldBackground,
-          backgroundImage: NetworkImage(imageUrl),
-        ),*/
-        InitialsAvatar(fullName: name),
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: InitialsAvatar(fullName: name),
+          ),
+        ),
         Positioned(
-          bottom: 2,
-          right: 2,
+          bottom: 1,
+          right: 1,
           child: Container(
-            width: 14,
-            height: 14,
+            width: 10,
+            height: 10,
             decoration: BoxDecoration(
               color: _getStatusColor(),
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.background, width: 2),
+              border: Border.all(
+                color: AppColors.background,
+                width: 2,
+              ),
             ),
           ),
         ),

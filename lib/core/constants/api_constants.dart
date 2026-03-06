@@ -2,7 +2,7 @@ class ApiConstants {
   //ApiConstants._();
 
   // Base URL
-  static const String baseUrl = "http://10.200.130.206:8080/api";
+  static const String baseUrl = "http://10.72.0.206:8080/api";
 
   // 10.0.2.2 = localhost Android Emulator
   // En production → https://api.invoksa.com
@@ -20,6 +20,7 @@ class ApiConstants {
 
   static const String invoices = "/invoices";
   static const String invoicesClient = "/invoices/client";
+  static const String invoiceAi = "/invoices/ai";
 
   static const String dashboard = "/dashboard";
 
