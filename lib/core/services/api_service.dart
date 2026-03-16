@@ -74,14 +74,20 @@ class ApiService {
 
   //  Gestion des réponses
   dynamic _handleResponse(http.Response response) {
-    final body = response.body.isEmpty ? {} : jsonDecode(response.body);
-
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return body;
+      return response.body.isEmpty ? {} : jsonDecode(response.body);
     } else if (response.statusCode == 401) {
       throw Exception("Session expirée. Veuillez vous reconnecter.");
     } else {
-      throw Exception(body["message"] ?? "Erreur API: ${response.statusCode}");
+      String errorMessage;
+      try {
+        final body = jsonDecode(response.body);
+        errorMessage = body["message"] ?? "Erreur API: ${response.statusCode}";
+      } catch (_) {
+        // Not a JSON response
+        errorMessage = "Erreur Serveur (${response.statusCode}): ${response.body.split('\n').first}";
+      }
+      throw Exception(errorMessage);
     }
   }
 }

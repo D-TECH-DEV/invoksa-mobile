@@ -18,12 +18,12 @@ class ClientsSearchBar extends StatelessWidget {
   final VoidCallback? onClear;
 
   const ClientsSearchBar({
-    Key? key,
+    super.key,
     required this.controller,
     this.hintText = 'Rechercher un client...',
     required this.onChanged,
     this.onClear,
-  }) : super(key: key);
+  });
 
   void _handleClear() {
     controller.clear();

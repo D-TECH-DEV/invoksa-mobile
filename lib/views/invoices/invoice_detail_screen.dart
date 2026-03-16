@@ -19,22 +19,31 @@ class InvoiceDetailScreen extends StatefulWidget {
 
 class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
   final InvoiceViewmodel _invoiceViewmodel = InvoiceViewmodel();
-  late final Invoice invoice = widget.invoice;
+  late Invoice _currentInvoice;
+
   @override
   void initState() {
-    _invoiceViewmodel.getInvoiceById(invoice.id!);
-    _invoiceViewmodel.addListener(() {
-      setState(() {});
-    });
+    _currentInvoice = widget.invoice;
+    _invoiceViewmodel.getInvoiceById(_currentInvoice.id!);
+    _invoiceViewmodel.addListener(_onViewModelChange);
     super.initState();
+  }
+
+  void _onViewModelChange() {
+    if (_invoiceViewmodel.invoice != null && mounted) {
+      setState(() {
+        _currentInvoice = _invoiceViewmodel.invoice!;
+      });
+    } else {
+      setState(() {});
+    }
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
+    _invoiceViewmodel.removeListener(_onViewModelChange);
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -48,13 +57,15 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title:  Text(
-          'Facture #${invoice.number}',
+          'Facture #${_currentInvoice.number}',
           style: AppTextStyles.headingMedium,
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined, color: AppColors.textPrimary),
-            onPressed: () {},
+            onPressed: () {
+              _invoiceViewmodel.shareInvoice(_currentInvoice.token!);
+            },
           ),
           IconButton(
             icon: const Icon(Icons.file_download_outlined, color: AppColors.textPrimary),
@@ -71,31 +82,31 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
         child: Column(
           children: [
             InvoiceStatusCard(
-              status: invoice.status,
-              totalAmount: '${invoice.total} F',
+              status: _currentInvoice.status,
+              totalAmount: '${_currentInvoice.total} F',
               dueDate: 'Échéance le 26 Octobre 2024',
             ),
             const SizedBox(height: AppSpacing.xl),
             ClientInfoSection(
-              name: invoice.client?.name ?? "Client inconnu",
+              name: _currentInvoice.client?.name ?? "Client inconnu",
               company: 'Microsoft',
-              email: invoice.client?.email ?? "Email inconnu",
-              phone: invoice.client?.phone ?? "Téléphone inconnu",
-              address: invoice.client?.address??"Non spécifier",
+              email: _currentInvoice.client?.email ?? "Email inconnu",
+              phone: _currentInvoice.client?.phone ?? "Téléphone inconnu",
+              address: _currentInvoice.client?.address??"Non spécifier",
               imageUrl: 'https://i.pravatar.cc/150?img=11',
             ),
             const SizedBox(height: AppSpacing.xl),
             InvoiceItemsTable(
-              items: (invoice.items ?? []).map((item) {
+              items: (_currentInvoice.items ?? []).map((item) {
                 return InvoiceItemData(
                   description: item.description,   // ou item.productName selon ton modèle
                   quantity: item.quantity,
                   price: "${item.price.toStringAsFixed(2)} F",
                 );
               }).toList(),
-              subtotal: "${invoice.total.toStringAsFixed(2)} F",
+              subtotal: "${_currentInvoice.total.toStringAsFixed(2)} F",
               tax: "0 F",
-              total: "${invoice.total.toStringAsFixed(2)} F",
+              total: "${_currentInvoice.total.toStringAsFixed(2)} F",
             ),
             const SizedBox(height: AppSpacing.lg),
             Row(
@@ -120,20 +131,77 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
           children: [
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: _invoiceViewmodel.isLoading
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+                  : ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: const RoundedRectangleBorder(borderRadius: AppRadius.medium),
                   elevation: 0,
                 ),
-                onPressed: () {},
+                onPressed: _currentInvoice.status.toUpperCase() == 'PAID' 
+                    ? null 
+                    : () async {
+                  // Proactive UI update
+                  setState(() {
+                    _currentInvoice = _currentInvoice.copyWith(
+                      status: 'PAID',
+                      statusCode: 200,
+                    );
+                  });
+
+                  final success = await _invoiceViewmodel.changeStatusPaid(_currentInvoice);
+                  
+                  if (success && mounted) {
+                    ScaffoldMessenger.of(context).showMaterialBanner(
+                      MaterialBanner(
+                        content: const Text(
+                          'Facture marquée comme payée !',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: AppColors.accent,
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                            },
+                            child: const Text('OK', style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    );
+                    // Automatically hide banner after 3 seconds
+                    Future.delayed(const Duration(seconds: 3), () {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                      }
+                    });
+                  } else if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Erreur: ${_invoiceViewmodel.errorMessage}'),
+                        backgroundColor: AppColors.danger,
+                      ),
+                    );
+                  }
+                },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.check_circle_outline, color: Colors.white),
-                    SizedBox(width: AppSpacing.md),
-                    Text('Marquer comme payée', style: AppTextStyles.button),
+                  children: [
+                    Icon(
+                      _currentInvoice.status.toUpperCase() == 'PAID' 
+                          ? Icons.check_circle 
+                          : Icons.check_circle_outline, 
+                      color: Colors.white
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Text(
+                      _currentInvoice.status.toUpperCase() == 'PAID' 
+                          ? 'Payée' 
+                          : 'Marquer comme payée', 
+                      style: AppTextStyles.button
+                    ),
                   ],
                 ),
               ),
@@ -147,7 +215,9 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                   side: const BorderSide(color: AppColors.primary),
                   shape: const RoundedRectangleBorder(borderRadius: AppRadius.medium),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  _invoiceViewmodel.shareInvoice(_currentInvoice.token!);
+                },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: const [

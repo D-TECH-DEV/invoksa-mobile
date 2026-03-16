@@ -1,25 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
-
+import 'core/services/storage_service.dart';
 import 'core/routes/app_routes.dart';
 import 'core/routes/app_router.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final storage = StorageService();
+  final initialLang = await storage.getLanguage();
+  runApp(MyApp(initialLocale: Locale(initialLang)));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  final Locale initialLocale;
+  const MyApp({super.key, required this.initialLocale});
 
-  // This widget is the root of your application.
+  static void setLocale(BuildContext context, Locale newLocale) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    state?.setLocale(newLocale);
+  }
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late Locale _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _locale = widget.initialLocale;
+  }
+
+  void setLocale(Locale locale) {
+    setState(() {
+      _locale = locale;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      locale: Locale("ar"),
+      locale: _locale,
       supportedLocales: const [
         Locale('fr'),
         Locale('en'),
+        Locale('ar'),
       ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

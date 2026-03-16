@@ -12,7 +12,7 @@ class InvoiceRepository {
   }
 
   Future<List<Invoice>> getInvoice() async {
-    final response = await _apiService.get(ApiConstants.invoices);
+    final response = await _apiService.get(ApiConstants.myInvoices);
     if (response == []) {
       return [];
     }
@@ -35,6 +35,14 @@ class InvoiceRepository {
       String description, String lang, String devise) async {
     final response = await _apiService.get(
         "${ApiConstants.invoiceAi}?description=$description&lang=$lang&devise=$devise"
+    );
+    return Invoice.fromJson(response);
+  }
+
+  Future<Invoice> update(Invoice invoice, int id) async{
+    final response = await _apiService.put(
+      "${ApiConstants.invoices}/$id",
+      invoice.toJson()
     );
     return Invoice.fromJson(response);
   }

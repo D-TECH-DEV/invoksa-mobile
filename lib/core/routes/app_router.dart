@@ -9,6 +9,9 @@ import '../../views/clients/client_detail_screen.dart';
 import '../../views/clients/client_create_screen.dart';
 import '../../views/invoices/invoice_detail_screen.dart';
 import '../../views/invoices/invoice_create_screen.dart';
+import '../../views/settings/settings_screen.dart';
+import '../../views/settings/currency_tax_settings_screen.dart';
+import '../../views/settings/language_settings_screen.dart';
 import 'app_routes.dart';
 
 class AppRouter {
@@ -36,6 +39,12 @@ class AppRouter {
         );
       case AppRoutes.invoiceCreate:
         return MaterialPageRoute(builder: (_) => const InvoiceCreateScreen());
+      case AppRoutes.settings:
+        return MaterialPageRoute(builder: (_) =>  SettingsScreen());
+      case AppRoutes.currencyTax:
+        return MaterialPageRoute(builder: (_) => const CurrencyTaxSettingsScreen());
+      case AppRoutes.language:
+        return MaterialPageRoute(builder: (_) => const LanguageSettingsScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

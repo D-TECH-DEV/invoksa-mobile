@@ -38,4 +38,11 @@ class InvoiceServices {
     Invoice invoice = await _invoiceRepository.getInvoiceAi(description, lang, devise);
     return invoice;
   }
+
+  Future<Invoice> markePaid (Invoice invoice) async{
+    invoice.statusCode = 200;
+    Invoice invoiceUpdated =
+    await _invoiceRepository.update(invoice, invoice.id!);
+    return invoiceUpdated;
+  }
 }

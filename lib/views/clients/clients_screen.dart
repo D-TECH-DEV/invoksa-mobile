@@ -69,6 +69,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                       onTap: () {
                         setState(() {
                           showSortFilters = !showSortFilters;
+
                         });
                       },
                     ),
@@ -82,15 +83,21 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await Navigator.pushNamed(context, AppRoutes.clientCreate);
           _clientViewModel.loadClients();
         },
         backgroundColor: AppColors.primary,
         elevation: 4,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: AppColors.background, size: 28),
+        //shape: const CircleBorder(),
+        icon: const Icon(Icons.add, color: AppColors.background, size: 28), 
+        label: Text(
+            "Client",
+          style: TextStyle(
+            color: Colors.white
+          ),
+        ),
       ),
     );
   }

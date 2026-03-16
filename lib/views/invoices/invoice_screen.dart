@@ -62,14 +62,39 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                     const SizedBox(height: AppSpacing.lg) : const SizedBox(),
                     _buildFilters(),
                     const SizedBox(height: AppSpacing.xl),
-                    SectionHeader(
-                      title: 'Les facture (${_invoiceViewmodel.invoices.length})',
-                      actionText: sortFilter,
-                      onTap: () {
-                        setState(() {
-                          showSortFilters = !showSortFilters;
-                        });
-                      },
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Les factures (${_invoiceViewmodel.invoices.length})',
+                          style: AppTextStyles.headingMedium.copyWith(fontSize: 18),
+                        ),
+                        GestureDetector(
+                          onTap: _showSortBottomSheet,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  sortFilter,
+                                  style: AppTextStyles.body.copyWith(
+                                    color: AppColors.accent,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.sort, color: AppColors.accent, size: 16),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _buildInvoicesList(),
@@ -91,14 +116,20 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.pushNamed(context, AppRoutes.invoiceCreate);
         },
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.accent,
         elevation: 4,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: AppColors.background, size: 28),
+        //shape: const CircleBorder(),
+        icon: const Icon(Icons.add, color: AppColors.background, size: 28),
+        label: Text(
+          "Facture",
+          style: TextStyle(
+            color: AppColors.white
+          ),
+        ),
       ),
     );
   }
@@ -261,6 +292,117 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         );
 
       },
+    );
+  }
+
+  void _showSortBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Trier par',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildSortOption(
+                icon: Icons.calendar_today_outlined,
+                title: 'Plus récent',
+                option: InvoiceSortOption.newest,
+              ),
+              _buildSortOption(
+                icon: Icons.history,
+                title: 'Plus ancien',
+                option: InvoiceSortOption.oldest,
+              ),
+              _buildSortOption(
+                icon: Icons.arrow_upward_rounded,
+                title: 'Montant élevé',
+                option: InvoiceSortOption.amountHigh,
+              ),
+              _buildSortOption(
+                icon: Icons.arrow_downward_rounded,
+                title: 'Montant faible',
+                option: InvoiceSortOption.amountLow,
+              ),
+              _buildSortOption(
+                icon: Icons.person_outline,
+                title: 'Nom du client',
+                option: InvoiceSortOption.clientName,
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSortOption({
+    required IconData icon,
+    required String title,
+    required InvoiceSortOption option,
+  }) {
+    bool isSelected = false;
+    switch (option) {
+      case InvoiceSortOption.newest: isSelected = sortFilter == "Plus récent"; break;
+      case InvoiceSortOption.oldest: isSelected = sortFilter == "Plus ancien"; break;
+      case InvoiceSortOption.amountHigh: isSelected = sortFilter == "Montant élevé"; break;
+      case InvoiceSortOption.amountLow: isSelected = sortFilter == "Montant faible"; break;
+      case InvoiceSortOption.clientName: isSelected = sortFilter == "Nom client"; break;
+    }
+
+    return ListTile(
+      onTap: () {
+        setState(() {
+          _invoiceViewmodel.sortInvoices(option);
+          switch (option) {
+            case InvoiceSortOption.newest: sortFilter = "Plus récent"; break;
+            case InvoiceSortOption.oldest: sortFilter = "Plus ancien"; break;
+            case InvoiceSortOption.amountHigh: sortFilter = "Montant élevé"; break;
+            case InvoiceSortOption.amountLow: sortFilter = "Montant faible"; break;
+            case InvoiceSortOption.clientName: sortFilter = "Nom client"; break;
+          }
+        });
+        Navigator.pop(context);
+      },
+      leading: Icon(
+        icon,
+        color: isSelected ? AppColors.accent : AppColors.textSecondary,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isSelected ? AppColors.accent : AppColors.textPrimary,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          fontSize: 15,
+        ),
+      ),
+      trailing: isSelected
+          ? const Icon(Icons.check_circle, color: AppColors.accent, size: 20)
+          : null,
     );
   }
 }

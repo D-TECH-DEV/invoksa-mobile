@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'package:invoksa/core/constants/api_constants.dart';
 import 'package:invoksa/models/client.dart';
 import 'package:invoksa/models/invoice.dart';
 import 'package:invoksa/models/invoice_item.dart';
 import 'package:invoksa/repositories/client_repository.dart';
 import 'package:invoksa/repositories/invoice_repository.dart';
 import 'package:invoksa/services/invoice_services.dart';
+import 'package:share_plus/share_plus.dart';
 
 class InvoiceViewmodel extends ChangeNotifier {
   final InvoiceRepository _invoiceRepository = InvoiceRepository();
@@ -25,6 +27,9 @@ class InvoiceViewmodel extends ChangeNotifier {
 
   /// Filtre de statut actif ("all", "paid", "pending", "unpaid")
   String _activeStatusFilter = 'all';
+
+  /// Option de tri active
+  InvoiceSortOption _currentSortOption = InvoiceSortOption.newest;
 
   Future <bool> addInvoice(Map<String, dynamic> client, List<Map<String, dynamic>> invoiceItems) async {
     try {
@@ -127,16 +132,66 @@ class InvoiceViewmodel extends ChangeNotifier {
       return true;
     } catch(e) {
       isLoading = false;
-      errorMessage = e.toString().replaceAll("E", "");
+      errorMessage = "Erreur IA: $e";
+      debugPrint("AI Extraction Error: $e");
       notifyListeners();
       return false;
     }
   }
 
+  Future<bool> changeStatusPaid(Invoice currentInvoice) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      // Ensure the invoice has an ID
+      if (currentInvoice.id == null) {
+        throw Exception("ID de facture manquant");
+      }
+
+      Invoice updatedInvoice =
+        await _invoiceServices.markePaid(currentInvoice);
+      final index = allInvoices.indexWhere((inv)
+        => inv.id == currentInvoice.id);
+      if (index != -1) {
+        allInvoices[index] = updatedInvoice;
+      }
+      
+      // Update the current single invoice if it matches
+      if (invoice?.id == currentInvoice.id) {
+        invoice = updatedInvoice;
+      }
+
+      _applyFilters();
+
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      errorMessage = e.toString();
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+  void shareInvoice(String token) {
+    String publicLink ="${ApiConstants.baseUrl}/i/$token";
+    Share.share(
+      "Bonjour ! Voici votre facture : $publicLink",
+      subject: "Facture Invoksa",
+    );
+  }
 
   /// Filtre la liste par statut. Compatible avec la recherche textuelle.
   void filterInvoices(String filter) {
     _activeStatusFilter = filter.toLowerCase();
+    _applyFilters();
+  }
+
+  /// Change l'option de tri
+  void sortInvoices(InvoiceSortOption option) {
+    _currentSortOption = option;
     _applyFilters();
   }
 
@@ -153,7 +208,7 @@ class InvoiceViewmodel extends ChangeNotifier {
     _applyFilters();
   }
 
-  /// Point unique de filtrage : combine statut + recherche textuelle.
+  /// Point unique de filtrage : combine statut + recherche textuelle + tri.
   void _applyFilters() {
     List<Invoice> result = allInvoices;
 
@@ -175,10 +230,31 @@ class InvoiceViewmodel extends ChangeNotifier {
       }).toList();
     }
 
+    // Appliquer le tri
+    switch (_currentSortOption) {
+      case InvoiceSortOption.newest:
+        result.sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+        break;
+      case InvoiceSortOption.oldest:
+        result.sort((a, b) => (a.createdAt ?? DateTime(0)).compareTo(b.createdAt ?? DateTime(0)));
+        break;
+      case InvoiceSortOption.amountHigh:
+        result.sort((a, b) => b.total.compareTo(a.total));
+        break;
+      case InvoiceSortOption.amountLow:
+        result.sort((a, b) => a.total.compareTo(b.total));
+        break;
+      case InvoiceSortOption.clientName:
+        result.sort((a, b) => (a.client?.name ?? '').compareTo(b.client?.name ?? ''));
+        break;
+    }
+
     invoices = result;
     notifyListeners();
   }
 
 
 }
+
+enum InvoiceSortOption { newest, oldest, amountHigh, amountLow, clientName }
 
