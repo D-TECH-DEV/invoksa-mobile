@@ -53,6 +53,12 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
     setState(() => _invoiceItems.add({'description': desc, 'quantity': qty, 'price': price, "total": qty * price}));
   }
 
+  void _updateArticle(int index, String desc, int qty, double price) {
+    setState(() {
+      _invoiceItems[index] = {'description': desc, 'quantity': qty, 'price': price, "total": qty * price};
+    });
+  }
+
   void _removeArticle(int index) => setState(() => _invoiceItems.removeAt(index));
 
   void _openClientSelector() {
@@ -130,10 +136,10 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
     );
   }
 
-  void _openAddArticleSheet() {
-    final descController = TextEditingController();
-    final qtyController = TextEditingController(text: "1");
-    final priceController = TextEditingController();
+  void _openAddOrEditArticleSheet({int? index, Map<String, dynamic>? item}) {
+    final descController = TextEditingController(text: item?['description'] ?? '');
+    final qtyController = TextEditingController(text: item?['quantity']?.toString() ?? "1");
+    final priceController = TextEditingController(text: item?['price']?.toString() ?? "");
 
     showModalBottomSheet(
       context: context,
@@ -165,7 +171,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              const Text("Nouvel Article", style: AppTextStyles.headingMedium),
+              Text(item == null ? "Nouvel Article" : "Modifier Article", style: AppTextStyles.headingMedium),
               const SizedBox(height: AppSpacing.lg),
               _buildInputLabel("Description"),
               _buildInput(descController, "Ex: Design d'interface", icon: Icons.description_outlined),
@@ -205,15 +211,24 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                   ),
                   onPressed: () {
                     if (descController.text.isNotEmpty) {
-                      _addArticle(
-                        descController.text,
-                        int.tryParse(qtyController.text) ?? 1,
-                        double.tryParse(priceController.text) ?? 0,
-                      );
+                      if (index != null) {
+                        _updateArticle(
+                          index,
+                          descController.text,
+                          int.tryParse(qtyController.text) ?? 1,
+                          double.tryParse(priceController.text) ?? 0,
+                        );
+                      } else {
+                        _addArticle(
+                          descController.text,
+                          int.tryParse(qtyController.text) ?? 1,
+                          double.tryParse(priceController.text) ?? 0,
+                        );
+                      }
                       Navigator.pop(context);
                     }
                   },
-                  child: const Text("Ajouter à la facture", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: Text(item == null ? "Ajouter à la facture" : "Modifier l'article", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               ),
             ],
@@ -632,7 +647,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
             children: [
               const Text("Détails", style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textSecondary, fontSize: 13, letterSpacing: 0.5)),
               GestureDetector(
-                onTap: _openAddArticleSheet,
+                onTap: () => _openAddOrEditArticleSheet(),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
@@ -688,41 +703,48 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
   }
 
   Widget _buildArticleItem(int index, Map<String, dynamic> item) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          margin: const EdgeInsets.only(top: 2),
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text("${item['quantity']}x", style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary, fontSize: 13)),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(item['description'], style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary, fontSize: 15)),
-              const SizedBox(height: 4),
-              Text("Prix unitaire : ${item['price'].toStringAsFixed(2)} €", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-            ],
-          ),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+    return InkWell(
+      onTap: () => _openAddOrEditArticleSheet(index: index, item: item),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("${(item['quantity'] * item['price']).toStringAsFixed(2)} €", style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 15)),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => _removeArticle(index),
-              child: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+            Container(
+              margin: const EdgeInsets.only(top: 2),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text("${item['quantity']}x", style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary, fontSize: 13)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item['description'], style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary, fontSize: 15)),
+                  const SizedBox(height: 4),
+                  Text("Prix unitaire : ${item['price'].toStringAsFixed(2)} €", style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text("${(item['quantity'] * item['price']).toStringAsFixed(2)} €", style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 15)),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => _removeArticle(index),
+                  child: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                ),
+              ],
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 
