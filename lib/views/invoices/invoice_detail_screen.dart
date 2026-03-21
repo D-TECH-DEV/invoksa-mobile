@@ -53,22 +53,51 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left, color: AppColors.textPrimary, size: 30),
+          icon: const Icon(
+            Icons.chevron_left,
+            color: AppColors.textPrimary,
+            size: 30,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
-        title:  Text(
+        title: Text(
           'Facture #${_currentInvoice.number}',
           style: AppTextStyles.headingMedium,
         ),
         actions: [
+          if (_currentInvoice.currentStatusName != 'PAID')
+            IconButton(
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: AppColors.textPrimary,
+              ),
+              onPressed: () async {
+                final result = await Navigator.pushNamed(
+                  context,
+                  '/invoiceCreate',
+                  arguments: _currentInvoice,
+                );
+
+                if (result == true) {
+                  // Refresh the invoice detail Viewmodel
+                  _invoiceViewmodel.getInvoiceById(_currentInvoice.id!);
+                }
+              },
+            ),
           IconButton(
-            icon: const Icon(Icons.share_outlined, color: AppColors.textPrimary),
+            icon: const Icon(
+              Icons.share_outlined,
+              color: AppColors.textPrimary,
+            ),
             onPressed: () {
               _invoiceViewmodel.shareInvoice(_currentInvoice.token!);
             },
           ),
           IconButton(
-            icon: const Icon(Icons.file_download_outlined, color: AppColors.textPrimary),
+            icon: const Icon(
+              Icons.file_download_outlined,
+              color: AppColors.textPrimary,
+            ),
             onPressed: () {},
           ),
         ],
@@ -92,14 +121,15 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
               company: 'Microsoft',
               email: _currentInvoice.client?.email ?? "Email inconnu",
               phone: _currentInvoice.client?.phone ?? "Téléphone inconnu",
-              address: _currentInvoice.client?.address??"Non spécifier",
+              address: _currentInvoice.client?.address ?? "Non spécifier",
               imageUrl: 'https://i.pravatar.cc/150?img=11',
             ),
             const SizedBox(height: AppSpacing.xl),
             InvoiceItemsTable(
               items: (_currentInvoice.items ?? []).map((item) {
                 return InvoiceItemData(
-                  description: item.description,   // ou item.productName selon ton modèle
+                  description:
+                      item.description, // ou item.productName selon ton modèle
                   quantity: item.quantity,
                   price: "${item.price.toStringAsFixed(2)} F",
                 );
@@ -111,9 +141,16 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
             const SizedBox(height: AppSpacing.lg),
             Row(
               children: [
-                const Icon(Icons.calendar_today_outlined, size: 16, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: AppSpacing.sm),
-                Text('Émise le : 12 Octobre 2024', style: AppTextStyles.caption),
+                Text(
+                  'Émise le : 12 Octobre 2024',
+                  style: AppTextStyles.caption,
+                ),
               ],
             ),
             const SizedBox(height: 120), // Bottom buttons space
@@ -132,79 +169,95 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
             SizedBox(
               width: double.infinity,
               child: _invoiceViewmodel.isLoading
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+                  ? const Center(
+                      child: CircularProgressIndicator(color: AppColors.accent),
+                    )
                   : ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: const RoundedRectangleBorder(borderRadius: AppRadius.medium),
-                  elevation: 0,
-                ),
-                onPressed: _currentInvoice.status.toUpperCase() == 'PAID' 
-                    ? null 
-                    : () async {
-                  // Proactive UI update
-                  setState(() {
-                    _currentInvoice = _currentInvoice.copyWith(
-                      status: 'PAID',
-                      statusCode: 200,
-                    );
-                  });
-
-                  final success = await _invoiceViewmodel.changeStatusPaid(_currentInvoice);
-                  
-                  if (success && mounted) {
-                    ScaffoldMessenger.of(context).showMaterialBanner(
-                      MaterialBanner(
-                        content: const Text(
-                          'Facture marquée comme payée !',
-                          style: TextStyle(color: Colors.white),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadius.medium,
                         ),
-                        backgroundColor: AppColors.accent,
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                        elevation: 0,
+                      ),
+                      onPressed: _currentInvoice.status.toUpperCase() == 'PAID'
+                          ? null
+                          : () async {
+                              // Proactive UI update
+                              setState(() {
+                                _currentInvoice = _currentInvoice.copyWith(
+                                  status: 'PAID',
+                                  statusCode: 200,
+                                );
+                              });
+
+                              final success = await _invoiceViewmodel
+                                  .changeStatusPaid(_currentInvoice);
+
+                              if (success && mounted) {
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showMaterialBanner(
+                                  MaterialBanner(
+                                    content: const Text(
+                                      'Facture marquée comme payée !',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    backgroundColor: AppColors.accent,
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).hideCurrentMaterialBanner();
+                                        },
+                                        child: const Text(
+                                          'OK',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                // Automatically hide banner after 3 seconds
+                                Future.delayed(const Duration(seconds: 3), () {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).hideCurrentMaterialBanner();
+                                  }
+                                });
+                              } else if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Erreur: ${_invoiceViewmodel.errorMessage}',
+                                    ),
+                                    backgroundColor: AppColors.danger,
+                                  ),
+                                );
+                              }
                             },
-                            child: const Text('OK', style: TextStyle(color: Colors.white)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _currentInvoice.status.toUpperCase() == 'PAID'
+                                ? Icons.check_circle
+                                : Icons.check_circle_outline,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Text(
+                            _currentInvoice.status.toUpperCase() == 'PAID'
+                                ? 'Payée'
+                                : 'Marquer comme payée',
+                            style: AppTextStyles.button,
                           ),
                         ],
                       ),
-                    );
-                    // Automatically hide banner after 3 seconds
-                    Future.delayed(const Duration(seconds: 3), () {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-                      }
-                    });
-                  } else if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Erreur: ${_invoiceViewmodel.errorMessage}'),
-                        backgroundColor: AppColors.danger,
-                      ),
-                    );
-                  }
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      _currentInvoice.status.toUpperCase() == 'PAID' 
-                          ? Icons.check_circle 
-                          : Icons.check_circle_outline, 
-                      color: Colors.white
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    Text(
-                      _currentInvoice.status.toUpperCase() == 'PAID' 
-                          ? 'Payée' 
-                          : 'Marquer comme payée', 
-                      style: AppTextStyles.button
-                    ),
-                  ],
-                ),
-              ),
             ),
             const SizedBox(height: AppSpacing.md),
             SizedBox(
@@ -213,7 +266,9 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: const BorderSide(color: AppColors.primary),
-                  shape: const RoundedRectangleBorder(borderRadius: AppRadius.medium),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppRadius.medium,
+                  ),
                 ),
                 onPressed: () {
                   _invoiceViewmodel.shareInvoice(_currentInvoice.token!);
@@ -225,7 +280,10 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                     SizedBox(width: AppSpacing.md),
                     Text(
                       'Partager la facture',
-                      style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -234,11 +292,6 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
           ],
         ),
       ),
-
-
     );
   }
-
-
-
 }
