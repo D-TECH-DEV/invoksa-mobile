@@ -98,7 +98,20 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
               Icons.file_download_outlined,
               color: AppColors.textPrimary,
             ),
-            onPressed: () {},
+            onPressed: () async {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Téléchargement en cours...')),
+              );
+              await _invoiceViewmodel.downloadInvoicePdf(_currentInvoice);
+              if (_invoiceViewmodel.errorMessage != null && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Erreur: ${_invoiceViewmodel.errorMessage}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
           ),
         ],
         bottom: const PreferredSize(

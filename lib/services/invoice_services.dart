@@ -2,6 +2,8 @@ import 'package:invoksa/models/client.dart';
 import 'package:invoksa/models/invoice.dart';
 import 'package:invoksa/models/invoice_item.dart';
 import 'package:invoksa/repositories/invoice_repository.dart';
+import 'package:invoksa/core/services/api_service.dart';
+import 'dart:typed_data';
 
 class InvoiceServices {
   final InvoiceRepository _invoiceRepository = InvoiceRepository();
@@ -44,5 +46,10 @@ class InvoiceServices {
     Invoice invoiceUpdated =
     await _invoiceRepository.update(invoice, invoice.id!);
     return invoiceUpdated;
+  }
+
+  Future<Uint8List> getInvoicePdf(int id) async {
+    final ApiService apiService = ApiService();
+    return await apiService.getBytes("/invoices/$id/pdf");
   }
 }

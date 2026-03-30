@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:universal_html/html.dart' as html;
 import 'package:invoksa/core/constants/api_constants.dart';
 import 'package:invoksa/models/client.dart';
 import 'package:invoksa/models/invoice.dart';
@@ -174,6 +177,51 @@ class InvoiceViewmodel extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<void> downloadInvoicePdf(Invoice invoice) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      if (invoice.id == null) {
+        throw Exception("ID de facture invalide");
+      }
+
+      final bytes = await _invoiceServices.getInvoicePdf(invoice.id!);
+      final filename = "Facture_${invoice.number ?? invoice.id}.pdf";
+
+      if (kIsWeb) {
+        // Logique Web pour forcer le téléchargement du PDF
+        final blob = html.Blob([bytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute("download", filename);
+        html.document.body?.append(anchor);
+        anchor.click();
+        anchor.remove();
+        html.Url.revokeObjectUrl(url);
+      } else {
+        // Logique Mobile/Desktop : sauvegarde temporaire et partage
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/$filename');
+        await file.writeAsBytes(bytes);
+        
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          subject: 'Votre facture $filename',
+        );
+      }
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      isLoading = false;
+      errorMessage = "Erreur de téléchargement: $e";
+      notifyListeners();
+    }
+  }
+
   void shareInvoice(String token) {
     String publicLink ="${ApiConstants.baseUrl}/i/$token";
     Share.share(

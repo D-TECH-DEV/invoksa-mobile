@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import 'token_service.dart';
@@ -32,6 +33,24 @@ class ApiService {
         .timeout(ApiConstants.connectTimeout);
 
     return _handleResponse(response);
+  }
+
+  // GET BYTES
+  Future<Uint8List> getBytes(String endpoint) async {
+    final response = await http
+        .get(
+      Uri.parse("${ApiConstants.baseUrl}$endpoint"),
+      headers: await _headers(),
+    )
+        .timeout(ApiConstants.connectTimeout);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response.bodyBytes;
+    } else if (response.statusCode == 401) {
+      throw Exception("Session expirée. Veuillez vous reconnecter.");
+    } else {
+      throw Exception("Erreur de téléchargement: ${response.statusCode}");
+    }
   }
 
   //  POST
