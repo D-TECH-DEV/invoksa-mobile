@@ -12,6 +12,8 @@ class DashboardViewModel extends ChangeNotifier {
   String? errorMessage;
 
   int totalInvoices = 0;
+  int paidInvoices = 0;
+  int pendingInvoices = 0;
   double totalRevenue = 0;
   List<Client> recentClients = [];
   List<Invoice> recentInvoices = [];
@@ -25,6 +27,10 @@ class DashboardViewModel extends ChangeNotifier {
       // Fetch all invoices
       final invoices = await _invoiceRepository.getInvoice();
       totalInvoices = invoices.length;
+      
+      // Calculate stats
+      paidInvoices = invoices.where((inv) => inv.status.toUpperCase() == 'PAID').length;
+      pendingInvoices = invoices.where((inv) => inv.status.toUpperCase() == 'PENDING').length;
       totalRevenue = invoices.fold(0, (sum, inv) => sum + inv.total);
       
       // Sort invoices by date and take recent ones

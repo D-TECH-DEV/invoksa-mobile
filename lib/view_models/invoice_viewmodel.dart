@@ -158,7 +158,6 @@ class InvoiceViewmodel extends ChangeNotifier {
         allInvoices[index] = updatedInvoice;
       }
       
-      // Update the current single invoice if it matches
       if (invoice?.id == currentInvoice.id) {
         invoice = updatedInvoice;
       }

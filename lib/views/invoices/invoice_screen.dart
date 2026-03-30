@@ -289,6 +289,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           amount: '${invoice.total} F',
           status: invoice.status,
           invoice: invoice,
+          onChanged: () {
+            _invoiceViewmodel.getInvoices();
+          },
         );
 
       },

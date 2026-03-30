@@ -2,10 +2,10 @@ class ApiConstants {
   //ApiConstants._();
 
   // Base URL
-  static const String baseUrl = "http://10.200.138.206:8080/api";
+  static const String baseUrl = "http://10.217.12.206:8080/api";
+  // static const String baseUrl = "https://api.invoksa.com:8080/api";
+  // static const String baseUrl = "http://10.0.2.2:8080/api";
 
-  // 10.0.2.2 = localhost Android Emulator
-  // En production → https://api.invoksa.com
 
   // Timeout
   static const Duration connectTimeout = Duration(seconds: 30);

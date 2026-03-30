@@ -15,6 +15,7 @@ class InvoiceListItem extends StatelessWidget {
   final String date;
   final String amount;
   final String status;
+  final VoidCallback? onChanged;
 
   const InvoiceListItem({
     super.key,
@@ -24,17 +25,21 @@ class InvoiceListItem extends StatelessWidget {
     required this.date,
     required this.amount,
     required this.status,
+    this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(
+      onTap: () async {
+        await Navigator.pushNamed(
           context,
           AppRoutes.invoiceDetail,
           arguments: invoice,
         );
+        if (onChanged != null) {
+          onChanged!();
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.md),
