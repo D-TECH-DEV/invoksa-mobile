@@ -1,234 +1,199 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 
-class InvoiceStatusCard extends StatelessWidget {
+class InvoiceHeaderSection extends StatelessWidget {
+  final String invoiceNumber;
   final String status;
-  final String totalAmount;
+
+  const InvoiceHeaderSection({
+    super.key,
+    required this.invoiceNumber,
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          'INV-#$invoiceNumber',
+          style: AppTextStyles.headingLarge.copyWith(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.5,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        _buildStatusBadge(),
+      ],
+    );
+  }
+
+  Widget _buildStatusBadge() {
+    String text;
+    Color color;
+
+    switch (status.toUpperCase()) {
+      case 'PAID':
+        text = 'Paid';
+        color = AppColors.success;
+        break;
+      case 'PENDING':
+        text = 'Unpaid';
+        color = AppColors.slate600;
+        break;
+      case 'OVERDUE':
+        text = 'Overdue';
+        color = AppColors.danger;
+        break;
+      default:
+        text = status;
+        color = AppColors.slate600;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppColors.slate200),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class InvoiceDatesSection extends StatelessWidget {
+  final String issuedDate;
   final String dueDate;
 
-  const InvoiceStatusCard({
+  const InvoiceDatesSection({
     super.key,
-    required this.status,
-    required this.totalAmount,
+    required this.issuedDate,
     required this.dueDate,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: AppRadius.medium,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          Text(
-            status.toUpperCase(),
-            style: AppTextStyles.caption.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-            ),
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Date d'emission:",
+                style: AppTextStyles.caption.copyWith(color: AppColors.slate500, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                issuedDate,
+                style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            totalAmount,
-            style: AppTextStyles.headingLarge.copyWith(fontSize: 32),
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Date d'échéance:",
+                style: AppTextStyles.caption.copyWith(color: AppColors.slate500, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                dueDate,
+                style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            dueDate,
-            style: AppTextStyles.caption.copyWith(fontSize: 13),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class ClientInfoSection extends StatelessWidget {
-  final String name;
-  final String company;
-  final String email;
-  final String phone;
-  final String address;
-  final String imageUrl;
+class InvoicePartiesSection extends StatelessWidget {
+  final String clientName;
+  final String clientAddress;
+  final String clientEmail;
+  final String clientAvatar;
 
-  const ClientInfoSection({
+  const InvoicePartiesSection({
     super.key,
-    required this.name,
-    required this.company,
-    required this.email,
-    required this.phone,
-    required this.address,
-    required this.imageUrl,
+    required this.clientName,
+    required this.clientAddress,
+    required this.clientEmail,
+    required this.clientAvatar,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Informations Client',
-          style: AppTextStyles.headingMedium,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
-            borderRadius: AppRadius.medium,
-            border: Border.all(color: AppColors.border),
-          ),
+        // Bill From (Assuming static host data for now based on UI)
+        /*Expanded(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                   CircleAvatar(
-                    radius: 24,
-                    backgroundImage: NetworkImage(imageUrl),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(name, style: AppTextStyles.headingMedium.copyWith(fontSize: 16)),
-                      Text(company, style: AppTextStyles.caption),
-                    ],
-                  ),
-                ],
+              Text(
+                'Bill from',
+                style: AppTextStyles.caption.copyWith(color: AppColors.slate500, fontSize: 13),
               ),
-              const SizedBox(height: AppSpacing.lg),
-              _buildInfoRow(Icons.mail_outline, email),
+              const SizedBox(height: AppSpacing.md),
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: AppColors.slate200,
+                 child: Icon(Icons.business, size: 20, color: AppColors.slate500),
+              ),
               const SizedBox(height: AppSpacing.sm),
-              _buildInfoRow(Icons.phone_outlined, phone),
-              const SizedBox(height: AppSpacing.sm),
-              _buildInfoRow(Icons.location_on_outlined, address),
+              Text('YouSoft Invoksa', style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 2),
+              Text(
+                '553, Park Avenue, East\nSide New York',
+                style: AppTextStyles.caption.copyWith(color: AppColors.slate500, fontSize: 12, height: 1.4),
+              ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: AppColors.textSecondary),
-        const SizedBox(width: AppSpacing.md),
+        ),*/
+        // Bill To
         Expanded(
-          child: Text(
-            text,
-            style: AppTextStyles.body.copyWith(fontSize: 14, color: AppColors.textSecondary),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class InvoiceItemsTable extends StatelessWidget {
-  final List<InvoiceItemData> items;
-  final String subtotal;
-  final String tax;
-  final String total;
-
-  const InvoiceItemsTable({
-    super.key,
-    required this.items,
-    required this.subtotal,
-    required this.tax,
-    required this.total,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-           children: [
-             const Text('Articles', style: AppTextStyles.headingMedium),
-             const Icon(Icons.receipt_long_outlined, color: AppColors.textSecondary),
-           ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: AppRadius.medium,
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTableHeader(),
-              const Divider(height: 24),
-              ...items.map((item) => _buildItemRow(item)).toList(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildSummaryRow('Sous-total', subtotal),
-              const SizedBox(height: AppSpacing.sm),
-              _buildSummaryRow('TVA (20%)', tax),
-              const Divider(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Total à régler', style: AppTextStyles.headingMedium),
-                  Text(total, style: AppTextStyles.headingLarge.copyWith(fontSize: 20)),
-                ],
+
+              const SizedBox(height: AppSpacing.md),
+              CircleAvatar(
+                radius: 18,
+                backgroundImage: NetworkImage(clientAvatar),
+                backgroundColor: AppColors.slate200,
               ),
+              const SizedBox(width: AppSpacing.sm),
+              Column(
+                children: [
+                  Text(clientName, style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 2),
+                  Text(
+                    clientAddress.isEmpty ? clientEmail : clientAddress,
+                    style: AppTextStyles.caption.copyWith(color: AppColors.slate500, fontSize: 12, height: 1.4),
+                  ),
+                ],
+              )
             ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildTableHeader() {
-    return Row(
-      children: [
-        const Expanded(flex: 3, child: Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-        const Expanded(child: Center(child: Text('Qté', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)))),
-        const Expanded(child: Align(alignment: Alignment.centerRight, child: Text('Total', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)))),
-      ],
-    );
-  }
-
-  Widget _buildItemRow(InvoiceItemData item) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Text(item.description, style: AppTextStyles.body.copyWith(fontSize: 13)),
-          ),
-          Expanded(
-            child: Center(child: Text(item.quantity.toString(), style: AppTextStyles.body.copyWith(fontSize: 13))),
-          ),
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(item.price, style: AppTextStyles.headingMedium.copyWith(fontSize: 13)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: AppTextStyles.caption.copyWith(fontSize: 14)),
-        Text(value, style: AppTextStyles.body.copyWith(fontSize: 14)),
       ],
     );
   }
@@ -238,6 +203,87 @@ class InvoiceItemData {
   final String description;
   final int quantity;
   final String price;
+  final String amount;
 
-  InvoiceItemData({required this.description, required this.quantity, required this.price});
+  InvoiceItemData({
+    required this.description,
+    required this.quantity,
+    required this.price,
+    required this.amount,
+  });
 }
+
+class InvoiceItemsSection extends StatelessWidget {
+  final List<InvoiceItemData> items;
+
+  const InvoiceItemsSection({
+    super.key,
+    required this.items,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Items',
+          style: AppTextStyles.caption.copyWith(color: AppColors.slate500, fontSize: 13),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: AppColors.slate200.withValues(alpha: 0.8)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.slate50,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  border: Border(bottom: BorderSide(color: AppColors.slate200.withValues(alpha: 0.5))),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(flex: 3, child: Text('Description', style: AppTextStyles.caption.copyWith(fontSize: 12))),
+                    Expanded(child: Text('Qty x Price', style: AppTextStyles.caption.copyWith(fontSize: 12), textAlign: TextAlign.center)),
+                    Expanded(child: Text('Amount', style: AppTextStyles.caption.copyWith(fontSize: 12), textAlign: TextAlign.right)),
+                  ],
+                ),
+              ),
+              // Items
+              ...items.asMap().entries.map((entry) {
+                int index = entry.key;
+                InvoiceItemData item = entry.value;
+                bool isLast = index == items.length - 1;
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    border: isLast ? null : Border(bottom: BorderSide(color: AppColors.slate200.withValues(alpha: 0.5))),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(width: 16, child: Text('${index + 1}.', style: AppTextStyles.body.copyWith(fontSize: 13, fontWeight: FontWeight.w500))),
+                      const SizedBox(width: 8),
+                      Expanded(flex: 3, child: Text(item.description, style: AppTextStyles.body.copyWith(fontSize: 13, fontWeight: FontWeight.w500), maxLines: 2, overflow: TextOverflow.ellipsis)),
+                      Expanded(child: Text('${item.quantity} x ${item.price}', style: AppTextStyles.body.copyWith(fontSize: 13, fontWeight: FontWeight.w500), textAlign: TextAlign.center)),
+                      //Expanded(child: Text('\$${item.price}', style: AppTextStyles.body.copyWith(fontSize: 13, color: AppColors.slate600), textAlign: TextAlign.right)),
+                      Expanded(child: Text('\$${item.amount}', style: AppTextStyles.body.copyWith(fontSize: 13, fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+

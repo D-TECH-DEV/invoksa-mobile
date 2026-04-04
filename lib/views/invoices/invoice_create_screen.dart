@@ -992,7 +992,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Prix unitaire : ${item['price'].toStringAsFixed(2)} €",
+                    "PU : ${item['price'].toStringAsFixed(2)} €",
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,

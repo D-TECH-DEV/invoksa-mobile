@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:invoksa/models/invoice.dart';
 import 'package:invoksa/view_models/invoice_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
@@ -10,7 +11,6 @@ import 'widgets/invoice_detail_widgets.dart';
 class InvoiceDetailScreen extends StatefulWidget {
   final Invoice invoice;
 
-  //const InvoiceDetailScreen({super.key});
   const InvoiceDetailScreen({super.key, required this.invoice});
 
   @override
@@ -23,10 +23,10 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
 
   @override
   void initState() {
+    super.initState();
     _currentInvoice = widget.invoice;
     _invoiceViewmodel.getInvoiceById(_currentInvoice.id!);
     _invoiceViewmodel.addListener(_onViewModelChange);
-    super.initState();
   }
 
   void _onViewModelChange() {
@@ -35,7 +35,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
         _currentInvoice = _invoiceViewmodel.invoice!;
       });
     } else {
-      setState(() {});
+      if (mounted) setState(() {});
     }
   }
 
@@ -47,6 +47,17 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Format dates realistically
+    final DateFormat formatter = DateFormat('dd MMM yyyy');
+    String issuedDateStr = 'Unknown';
+    String dueDateStr = 'Unknown';
+    
+    if (_currentInvoice.createdAt != null) {
+      issuedDateStr = formatter.format(_currentInvoice.createdAt!);
+      // Assuming 14 days due date for demo
+      dueDateStr = formatter.format(_currentInvoice.createdAt!.add(const Duration(days: 14)));
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -60,44 +71,29 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Facture #${_currentInvoice.number}',
-          style: AppTextStyles.headingMedium,
-        ),
         actions: [
           if (_currentInvoice.currentStatusName != 'PAID')
             IconButton(
-              icon: const Icon(
-                Icons.edit_outlined,
-                color: AppColors.textPrimary,
-              ),
+              icon: const Icon(Icons.edit_outlined, color: AppColors.textPrimary),
               onPressed: () async {
                 final result = await Navigator.pushNamed(
                   context,
                   '/invoiceCreate',
                   arguments: _currentInvoice,
                 );
-
                 if (result == true) {
-                  // Refresh the invoice detail Viewmodel
                   _invoiceViewmodel.getInvoiceById(_currentInvoice.id!);
                 }
               },
             ),
           IconButton(
-            icon: const Icon(
-              Icons.share_outlined,
-              color: AppColors.textPrimary,
-            ),
+            icon: const Icon(Icons.share_outlined, color: AppColors.textPrimary),
             onPressed: () {
               _invoiceViewmodel.shareInvoice(_currentInvoice.token!);
             },
           ),
           IconButton(
-            icon: const Icon(
-              Icons.file_download_outlined,
-              color: AppColors.textPrimary,
-            ),
+            icon: const Icon(Icons.file_download_outlined, color: AppColors.textPrimary),
             onPressed: () async {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Téléchargement en cours...')),
@@ -114,64 +110,51 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
             },
           ),
         ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.border),
-        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
         child: Column(
           children: [
-            InvoiceStatusCard(
+            InvoiceHeaderSection(
+              invoiceNumber: _currentInvoice.number ?? '0000',
               status: _currentInvoice.status,
-              totalAmount: '${_currentInvoice.total} F',
-              dueDate: 'Échéance le 26 Octobre 2024',
             ),
-            const SizedBox(height: AppSpacing.xl),
-            ClientInfoSection(
-              name: _currentInvoice.client?.name ?? "Client inconnu",
-              company: 'Microsoft',
-              email: _currentInvoice.client?.email ?? "Email inconnu",
-              phone: _currentInvoice.client?.phone ?? "Téléphone inconnu",
-              address: _currentInvoice.client?.address ?? "Non spécifier",
-              imageUrl: 'https://i.pravatar.cc/150?img=11',
+            const SizedBox(height: 32),
+            InvoicePartiesSection(
+              clientName: _currentInvoice.client?.name ?? 'Client inconnu',
+              clientAddress: _currentInvoice.client?.address ?? '',
+              clientEmail: _currentInvoice.client?.email ?? '',
+              clientAvatar: 'https://i.pravatar.cc/150?u=${_currentInvoice.client?.id ?? 0}',
             ),
-            const SizedBox(height: AppSpacing.xl),
-            InvoiceItemsTable(
+            const SizedBox(height: 32),
+            InvoiceDatesSection(
+              issuedDate: issuedDateStr,
+              dueDate: dueDateStr,
+            ),
+            const SizedBox(height: 40),
+            InvoiceItemsSection(
               items: (_currentInvoice.items ?? []).map((item) {
                 return InvoiceItemData(
-                  description:
-                      item.description, // ou item.productName selon ton modèle
+                  description: item.description,
                   quantity: item.quantity,
-                  price: "${item.price.toStringAsFixed(2)} F",
+                  price: item.price.toStringAsFixed(2),
+                  amount: (item.quantity * item.price).toStringAsFixed(2),
                 );
               }).toList(),
-              subtotal: "${_currentInvoice.total.toStringAsFixed(2)} F",
-              tax: "0 F",
-              total: "${_currentInvoice.total.toStringAsFixed(2)} F",
             ),
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
-                const Icon(
-                  Icons.calendar_today_outlined,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'Émise le : 12 Octobre 2024',
-                  style: AppTextStyles.caption,
-                ),
-              ],
+            const SizedBox(height: 24),
+            InvoiceTotalsSection(
+              subtotal: _currentInvoice.total.toStringAsFixed(2),
+              taxAmount: "0.00",
+              discountAmount: "0.00",
+              grandTotal: _currentInvoice.total.toStringAsFixed(2),
             ),
             const SizedBox(height: 120), // Bottom buttons space
           ],
         ),
       ),
       bottomSheet: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
         decoration: const BoxDecoration(
           color: Colors.white,
           border: Border(top: BorderSide(color: AppColors.border)),
@@ -183,11 +166,11 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
               width: double.infinity,
               child: _invoiceViewmodel.isLoading
                   ? const Center(
-                      child: CircularProgressIndicator(color: AppColors.accent),
+                      child: CircularProgressIndicator(color: AppColors.primary),
                     )
                   : ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: AppColors.textPrimary, // Changed to black to match premium theme
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: const RoundedRectangleBorder(
                           borderRadius: AppRadius.medium,
@@ -197,7 +180,6 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                       onPressed: _currentInvoice.status.toUpperCase() == 'PAID'
                           ? null
                           : () async {
-                              // Proactive UI update
                               setState(() {
                                 _currentInvoice = _currentInvoice.copyWith(
                                   status: 'PAID',
@@ -205,48 +187,35 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                                 );
                               });
 
-                              final success = await _invoiceViewmodel
-                                  .changeStatusPaid(_currentInvoice);
+                              final success = await _invoiceViewmodel.changeStatusPaid(_currentInvoice);
 
                               if (success && mounted) {
-                                ScaffoldMessenger.of(
-                                  context,
-                                ).showMaterialBanner(
+                                ScaffoldMessenger.of(context).showMaterialBanner(
                                   MaterialBanner(
                                     content: const Text(
                                       'Facture marquée comme payée !',
                                       style: TextStyle(color: Colors.white),
                                     ),
-                                    backgroundColor: AppColors.accent,
+                                    backgroundColor: AppColors.success,
                                     actions: [
                                       TextButton(
                                         onPressed: () {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).hideCurrentMaterialBanner();
+                                          ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
                                         },
-                                        child: const Text(
-                                          'OK',
-                                          style: TextStyle(color: Colors.white),
-                                        ),
+                                        child: const Text('OK', style: TextStyle(color: Colors.white)),
                                       ),
                                     ],
                                   ),
                                 );
-                                // Automatically hide banner after 3 seconds
                                 Future.delayed(const Duration(seconds: 3), () {
                                   if (mounted) {
-                                    ScaffoldMessenger.of(
-                                      context,
-                                    ).hideCurrentMaterialBanner();
+                                    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
                                   }
                                 });
                               } else if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(
-                                      'Erreur: ${_invoiceViewmodel.errorMessage}',
-                                    ),
+                                    content: Text('Erreur: ${_invoiceViewmodel.errorMessage}'),
                                     backgroundColor: AppColors.danger,
                                   ),
                                 );
@@ -263,44 +232,16 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                           ),
                           const SizedBox(width: AppSpacing.md),
                           Text(
-                            _currentInvoice.status.toUpperCase() == 'PAID'
-                                ? 'Payée'
-                                : 'Marquer comme payée',
-                            style: AppTextStyles.button,
+                            _currentInvoice.status.toUpperCase() == 'PAID' ? 'Payée' : 'Marquer comme payée',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
                           ),
                         ],
                       ),
                     ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: AppColors.primary),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: AppRadius.medium,
-                  ),
-                ),
-                onPressed: () {
-                  _invoiceViewmodel.shareInvoice(_currentInvoice.token!);
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.share_outlined, color: AppColors.primary),
-                    SizedBox(width: AppSpacing.md),
-                    Text(
-                      'Partager la facture',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),
@@ -308,3 +249,62 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
     );
   }
 }
+
+class InvoiceTotalsSection extends StatelessWidget {
+  final String subtotal;
+  final String taxAmount;
+  final String discountAmount;
+  final String grandTotal;
+
+  const InvoiceTotalsSection({
+    super.key,
+    required this.subtotal,
+    required this.taxAmount,
+    required this.discountAmount,
+    required this.grandTotal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.slate50.withValues(alpha: 0.5),
+        border: Border.all(color: AppColors.slate200.withValues(alpha: 0.8)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          _buildRow('Subtotal', '\$$subtotal'),
+          const SizedBox(height: 12),
+          _buildRow('Tax (0%)', '\$$taxAmount'), // Modify tax accordingly if needed
+          if (discountAmount != '0' && discountAmount != '0.00') ...[
+            const SizedBox(height: 12),
+            _buildRow('Discount', '-\$$discountAmount'),
+          ],
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Grand total', style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500, fontSize: 14)),
+              Text('\$$grandTotal', style: AppTextStyles.headingMedium.copyWith(fontWeight: FontWeight.w600, fontSize: 16)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: AppTextStyles.caption.copyWith(color: AppColors.slate400, fontSize: 14)),
+        Text(value, style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500, fontSize: 14)),
+      ],
+    );
+  }
+}
+
