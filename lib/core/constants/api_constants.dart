@@ -2,7 +2,7 @@ class ApiConstants {
   //ApiConstants._();
 
   // Base URL
-  static const String baseUrl = "http://10.217.12.206:8080/api";
+  static const String baseUrl = "http://10.77.247.206:8080/api";
   // static const String baseUrl = "https://api.invoksa.com:8080/api";
   // static const String baseUrl = "http://10.0.2.2:8080/api";
 

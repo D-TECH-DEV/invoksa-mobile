@@ -629,7 +629,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _openAIHelperSheet,
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.accent,
           icon: const Icon(Icons.auto_awesome, color: Colors.white),
           label: const Text("IA", style: TextStyle(color: Colors.white)),
         ),

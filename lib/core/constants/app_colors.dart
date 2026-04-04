@@ -6,6 +6,7 @@ class AppColors {
   // Primary Colors
   static const Color primary = Color(0xFF0D1B2A);
   static const Color accent = Color(0xFF2EC4B6);
+  static const Color accent2 = Color(0xFF0D868A);
   static const Color secondary = Color(0xFF6C757D);
   static const darkBlue = Color(0xFF0F2B3A);
   static const white = Color(0xFFFFFFFF);
@@ -20,6 +21,7 @@ class AppColors {
   static const Color textPrimary = Color(0xFF0D1B2A);
   static const Color textSecondary = Color(0xFF6C757D);
   static const textGrey = Color(0xFF6B7280);
+
 
   // Status
   static const Color success = Colors.green;

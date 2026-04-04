@@ -42,8 +42,8 @@ class InvoiceListItem extends StatelessWidget {
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.md),
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.lg),
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: AppRadius.large,
@@ -108,18 +108,18 @@ class InvoiceListItem extends StatelessWidget {
 
     switch (status) {
       case "paid":
-        iconData = Icons.south_west;
+        iconData = Icons.check;
         iconColor = Colors.green;
         bgColor = AppColors.scaffoldBackground;
         break;
 
       case "pending":
-        iconData = Icons.north_east;
+        iconData = Icons.pending_actions;
         iconColor = Colors.orange;
         bgColor = AppColors.scaffoldBackground;
         break;
       case "unpaid":
-        iconData = Icons.north_east;
+        iconData = Icons.warning;
         iconColor = Colors.red;
         bgColor = AppColors.scaffoldBackground;
         break;
