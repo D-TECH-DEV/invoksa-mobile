@@ -17,6 +17,9 @@ class DashboardViewModel extends ChangeNotifier {
   double totalRevenue = 0;
   List<Client> recentClients = [];
   List<Invoice> recentInvoices = [];
+  
+  // Data for the chart: Month Index (1-12) -> Total Revenue
+  Map<int, double> monthlyRevenue = {};
 
   Future<void> loadDashboardData() async {
     try {
@@ -33,6 +36,20 @@ class DashboardViewModel extends ChangeNotifier {
       pendingInvoices = invoices.where((inv) => inv.status.toUpperCase() == 'PENDING').length;
       totalRevenue = invoices.fold(0, (sum, inv) => sum + inv.total);
       
+      // Calculate monthly revenue for the current year
+      monthlyRevenue = {};
+      final now = DateTime.now();
+      for (int i = 1; i <= 12; i++) {
+        monthlyRevenue[i] = 0;
+      }
+      
+      for (var inv in invoices) {
+        if (inv.createdAt != null && inv.createdAt!.year == now.year) {
+          int month = inv.createdAt!.month;
+          monthlyRevenue[month] = (monthlyRevenue[month] ?? 0) + inv.total;
+        }
+      }
+
       // Sort invoices by date and take recent ones
       final sortedInvoices = List<Invoice>.from(invoices)
         ..sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
@@ -52,8 +69,16 @@ class DashboardViewModel extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       isLoading = false;
-      errorMessage = e.toString();
+      errorMessage = _getFriendlyErrorMessage(e);
       notifyListeners();
     }
+  }
+
+  String _getFriendlyErrorMessage(dynamic e) {
+    String error = e.toString().toLowerCase();
+    if (error.contains('network') || error.contains('connection')) {
+      return "Impossible de charger le tableau de bord. Vérifiez votre connexion.";
+    }
+    return "Une erreur est survenue lors du chargement des données.";
   }
 }

@@ -7,6 +7,7 @@ import '../shared/section_header.dart';
 import 'widgets/client_card.dart';
 import 'widgets/clients_search_bar.dart';
 import '../../core/routes/app_routes.dart';
+import '../shared/empty_state_widget.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -128,7 +129,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
               ),
               IconButton(
                 icon: const Icon(Icons.settings, color: AppColors.textPrimary),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRoutes.settings);
+                },
               ),
             ],
           )
@@ -148,7 +151,16 @@ class _ClientsScreenState extends State<ClientsScreen> {
     }
 
     if (_clientViewModel.clients.isEmpty) {
-      return const Center(child: Text("Aucun client trouvé."));
+      return EmptyStateWidget(
+        icon: Icons.people_alt_rounded,
+        title: 'Aucun client trouvé',
+        description: 'Commencez par ajouter vos premiers clients pour gérer vos factures plus facilement.',
+        actionText: 'Ajouter un client',
+        onActionPressed: () async {
+          await Navigator.pushNamed(context, AppRoutes.clientCreate);
+          _clientViewModel.loadClients();
+        },
+      );
     }
 
     return ListView.builder(

@@ -3,6 +3,7 @@ import 'package:invoksa/view_models/auth_viewmodel.dart';
 import 'widgets/auth_widgets.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
+import '../../core/utils/app_utils.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -154,9 +155,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   
                   Row(
                     children: [
-                      SocialAuthButton(text: 'Google', onPressed: () {}),
+                      SocialAuthButton(text: 'Google', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Inscription Google")),
                       const SizedBox(width: 16),
-                      SocialAuthButton(text: 'Apple', onPressed: () {}),
+                      SocialAuthButton(text: 'Apple', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Inscription Apple")),
                     ],
                   ),
                   

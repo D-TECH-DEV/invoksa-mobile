@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/routes/app_routes.dart';
 import 'widgets/settings_item.dart';
+import '../../core/utils/app_utils.dart';
 
 class SettingsScreen extends StatelessWidget {
   SettingsScreen({super.key});
@@ -40,7 +41,7 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.person_rounded,
                 title: 'Profil personnel',
                 subtitle: 'Modifier vos informations de contact',
-                onTap: () {},
+                onTap: () => AppUtils.showComingSoonSnackBar(context, "Profil personnel"),
               ),
 
               const SizedBox(height: 24),
@@ -65,7 +66,7 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.notifications_active_rounded,
                 title: 'Notifications',
                 subtitle: 'Gérer vos alertes et rappels',
-                onTap: () {},
+                onTap: () => AppUtils.showComingSoonSnackBar(context, "Notifications"),
               ),
 
               const SizedBox(height: 24),
@@ -74,13 +75,13 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.lock_rounded,
                 title: 'Mot de passe',
                 subtitle: "Changer votre code d'accès",
-                onTap: () {},
+                onTap: () => AppUtils.showComingSoonSnackBar(context, "Mot de passe"),
               ),
               SettingsItem(
                 icon: Icons.help_center_rounded,
                 title: "Centre d'aide",
                 subtitle: "Besoin d'aide ? Contactez-nous",
-                onTap: () {},
+                onTap: () => AppUtils.showComingSoonSnackBar(context, "Centre d'aide"),
               ),
               SettingsItem(
                 icon: Icons.article_rounded,
@@ -102,7 +103,7 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.info_rounded,
                 title: 'À propos',
                 subtitle: 'Version 1.0.0 • Invoksa SaaS',
-                onTap: () {},
+                onTap: () => AppUtils.showComingSoonSnackBar(context, "À propos"),
               ),
 
               const SizedBox(height: 32),

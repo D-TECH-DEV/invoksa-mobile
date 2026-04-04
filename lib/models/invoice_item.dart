@@ -7,6 +7,7 @@ class InvoiceItem {
   final int quantity;
   final double price;
   final double total;
+  final double taxRate;
 
   InvoiceItem({
     this.id,
@@ -14,6 +15,7 @@ class InvoiceItem {
     required this.description,
     required this.quantity,
     required this.price,
+    this.taxRate = 20.0,
     double? total,
   }) : total = total ?? quantity * price;
 
@@ -24,6 +26,7 @@ class InvoiceItem {
     quantity: json['quantity'],
     price: (json['price'] as num).toDouble(),
     total: (json['total'] as num?)?.toDouble(),
+    taxRate: (json['taxRate'] as num?)?.toDouble() ?? 20.0,
   );
 
   Map<String, dynamic> toJson() => {
@@ -32,5 +35,6 @@ class InvoiceItem {
     'quantity': quantity,
     'price': price,
     'total': total,
+    'taxRate': taxRate,
   };
 }

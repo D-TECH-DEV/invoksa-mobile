@@ -8,6 +8,7 @@ import '../shared/section_header.dart';
 import 'widgets/invoice_filter_chip.dart';
 import '../shared/invoice_list_item.dart';
 import '../../core/routes/app_routes.dart';
+import '../shared/empty_state_widget.dart';
 
 class InvoiceScreen extends StatefulWidget {
   const InvoiceScreen({super.key});
@@ -160,7 +161,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.settings, color: AppColors.textPrimary),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pushNamed(context, AppRoutes.settings);
+              },
             ),
           ],
         )
@@ -274,7 +277,15 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     }
 
     if(_invoiceViewmodel.invoices.isEmpty) {
-      return Center(child: const Text("Aucune facture !"),);
+      return EmptyStateWidget(
+        icon: Icons.receipt_long_rounded,
+        title: 'Aucune facture !',
+        description: 'Vous n\'avez pas encore créé de facture pour ce filtre.',
+        actionText: 'Créer une facture',
+        onActionPressed: () {
+          Navigator.pushNamed(context, AppRoutes.invoiceCreate);
+        },
+      );
     }
     return ListView.builder(
       shrinkWrap: true,

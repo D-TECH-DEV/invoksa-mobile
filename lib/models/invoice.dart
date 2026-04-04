@@ -13,6 +13,8 @@ class Invoice {
   final String? number;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? dueDate;
+  final String? currency;
   final List<InvoiceItem>? items;
   final int deleted;
 
@@ -34,9 +36,11 @@ class Invoice {
     //DateTime? updatedAt,
     this.items,
     this.deleted = 0,
-     this.number,
+    this.number,
     this.createdAt,
     this.updatedAt,
+    this.dueDate,
+    this.currency,
   }) ;
 
   String get formattedDate =>
@@ -58,6 +62,8 @@ class Invoice {
         : [],
     deleted: json['deleted'] ?? 0,
     client: json['client'] != null ? Client.fromJson(json['client']) : null,
+    dueDate: json['dueDate'] != null ? DateTime.tryParse(json['dueDate']) : null,
+    currency: json['currency'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -69,6 +75,8 @@ class Invoice {
     'updatedAt': updatedAt?.toIso8601String(),
     'items': (items ?? []).map((x) => x.toJson()).toList(),
     'deleted': deleted,
+    'dueDate': dueDate?.toIso8601String(),
+    'currency': currency,
   };
 
   Invoice copyWith({
@@ -80,6 +88,8 @@ class Invoice {
     String? number,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? dueDate,
+    String? currency,
     List<InvoiceItem>? items,
     int? deleted,
   }) {
@@ -92,6 +102,8 @@ class Invoice {
       number: number ?? this.number,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      dueDate: dueDate ?? this.dueDate,
+      currency: currency ?? this.currency,
       items: items ?? this.items,
       deleted: deleted ?? this.deleted,
     );

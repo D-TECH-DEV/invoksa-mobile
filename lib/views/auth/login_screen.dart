@@ -4,6 +4,7 @@ import '../../view_models/auth_viewmodel.dart';
 import 'widgets/auth_widgets.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
+import '../../core/utils/app_utils.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -129,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () => AppUtils.showComingSoonSnackBar(context, "Mot de passe oublié"),
                       child: const Text(
                         'Mot de passe oublié ?',
                         style: TextStyle(
@@ -168,9 +169,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   
                   Row(
                     children: [
-                      SocialAuthButton(text: 'Google', onPressed: () {}),
+                      SocialAuthButton(text: 'Google', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Connexion Google")),
                       const SizedBox(width: 16),
-                      SocialAuthButton(text: 'Apple', onPressed: () {}),
+                      SocialAuthButton(text: 'Apple', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Connexion Apple")),
                     ],
                   ),
                   

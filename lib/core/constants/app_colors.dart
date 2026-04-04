@@ -14,13 +14,20 @@ class AppColors {
   // Backgrounds
   static const Color background = Colors.white;
   static const Color scaffoldBackground = Color(0xFFF8F9FA);
+
   static const border = Color(0xFFE5E7EB);
+  static const borderAccent = Color(0xFF2EC4B6);
+
 
 
   // Text
   static const Color textPrimary = Color(0xFF0D1B2A);
+  static const Color textAccent = Color(0xFF2EC4B6);
   static const Color textSecondary = Color(0xFF6C757D);
   static const textGrey = Color(0xFF6B7280);
+
+  // Specials
+  //static const Color limeGreenDark = Color(0xFF8EB712);
 
 
   // Status

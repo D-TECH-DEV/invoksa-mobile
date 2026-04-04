@@ -4,13 +4,10 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_radius.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
-import '../../core/routes/app_routes.dart';
-import '../../view_models/invoice_viewmodel.dart';
-import '../../models/client.dart';
-
+import 'package:intl/intl.dart';
 import '../../models/client.dart';
 import '../../models/invoice.dart';
-import '../../models/invoice_item.dart';
+import '../../view_models/invoice_viewmodel.dart';
 
 class InvoiceCreateScreen extends StatefulWidget {
   final Invoice? invoice;
@@ -26,6 +23,12 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
   Client? _selectedClient;
   String? errorMessageAi;
   final List<Map<String, dynamic>> _invoiceItems = [];
+
+  DateTime? _dueDate;
+  DateTime? _invoiceDate;
+  String _currency = 'INR';
+  final List<String> _currencies = ['\$', '€', '£', 'XOF', 'FCFA', 'INR'];
+  final TextEditingController _invoiceNumberController = TextEditingController(text: "INV-001");
 
   // AI Chat State
   final TextEditingController _aiController = TextEditingController();
@@ -46,12 +49,24 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
 
     if (widget.invoice != null) {
       _selectedClient = widget.invoice!.client;
+      _invoiceDate = widget.invoice!.createdAt;
+      _dueDate = widget.invoice!.dueDate;
+      
+      if (widget.invoice!.currency != null) {
+        _currency = widget.invoice!.currency!;
+      }
+      
+      if (widget.invoice!.number != null && widget.invoice!.number!.isNotEmpty) {
+        _invoiceNumberController.text = widget.invoice!.number!;
+      }
+
       if (widget.invoice!.items != null) {
         for (var item in widget.invoice!.items!) {
           _invoiceItems.add({
             'description': item.description,
             'quantity': item.quantity,
             'price': item.price,
+            'taxRate': item.taxRate,
             'total': item.total,
             'id': item.id,
           });
@@ -104,101 +119,176 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
   void _openClientSelector() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (_) {
-        return AnimatedBuilder(
-          animation: _invoiceViewmodel,
-          builder: (context, _) {
-            if (_invoiceViewmodel.isLoading) {
-              return const SizedBox(
-                height: 300,
-                child: Center(
-                  child: CircularProgressIndicator(color: AppColors.accent),
-                ),
-              );
-            }
-
-            if (_invoiceViewmodel.clients.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                child: Center(
-                  child: Text(
-                    "Aucun client disponible",
-                    style: AppTextStyles.caption,
-                  ),
-                ),
-              );
-            }
-
-            return SafeArea(
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+        String searchQuery = '';
+        return StatefulBuilder(
+          builder: (context, setStateLocal) {
+            return AnimatedBuilder(
+              animation: _invoiceViewmodel,
+              builder: (context, _) {
+                if (_invoiceViewmodel.isLoading) {
+                  return const SizedBox(
+                    height: 300,
+                    child: Center(
+                      child: CircularProgressIndicator(color: AppColors.accent),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    const Text(
-                      "Sélectionner un client",
-                      style: AppTextStyles.headingMedium,
+                  );
+                }
+
+                // If no clients AT ALL
+                if (_invoiceViewmodel.clients.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Center(
+                          child: Text(
+                            "Aucun client disponible",
+                            style: AppTextStyles.caption,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/client-create');
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text("Ajouter un client"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    Flexible(
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: _invoiceViewmodel.clients.length,
-                        separatorBuilder: (_, __) =>
-                            const Divider(height: 1, color: AppColors.border),
-                        itemBuilder: (context, index) {
-                          final client = _invoiceViewmodel.clients[index];
-                          return ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.lg,
-                              vertical: AppSpacing.xs,
-                            ),
-                            leading: CircleAvatar(
-                              backgroundColor: AppColors.primary.withOpacity(
-                                0.1,
+                  );
+                }
+
+                // Filtering logic
+                final filteredClients = _invoiceViewmodel.clients.where(
+                  (c) => c.name.toLowerCase().contains(searchQuery.toLowerCase()) || 
+                         c.email.toLowerCase().contains(searchQuery.toLowerCase())
+                ).toList();
+
+                return SafeArea(
+                  child: Container(
+                    height: MediaQuery.of(context).size.height * 0.7, // Take 70% of screen to fit keyboard and list
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppColors.border,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Sélectionner un client",
+                                style: AppTextStyles.headingMedium,
                               ),
+                              IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  Navigator.pushNamed(context, '/client-create');
+                                },
+                                icon: const Icon(Icons.person_add_alt_1, color: AppColors.accent),
+                                tooltip: "Nouveau client",
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                          child: TextField(
+                            onChanged: (val) => setStateLocal(() => searchQuery = val),
+                            decoration: InputDecoration(
+                              hintText: "Rechercher par nom ou email...",
+                              prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                              filled: true,
+                              fillColor: AppColors.slate50,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        if (filteredClients.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(AppSpacing.lg),
+                            child: Center(
                               child: Text(
-                                client.name[0].toUpperCase(),
-                                style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                "Aucun client trouvé",
+                                style: AppTextStyles.caption,
                               ),
                             ),
-                            title: Text(
-                              client.name,
-                              style: AppTextStyles.body.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          )
+                        else
+                          Flexible(
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              itemCount: filteredClients.length,
+                              separatorBuilder: (_, __) =>
+                                  const Divider(height: 1, color: AppColors.border),
+                              itemBuilder: (context, index) {
+                                final client = filteredClients[index];
+                                return ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.lg,
+                                    vertical: AppSpacing.xs,
+                                  ),
+                                  leading: CircleAvatar(
+                                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                                    child: Text(
+                                      client.name[0].toUpperCase(),
+                                      style: const TextStyle(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  title: Text(
+                                    client.name,
+                                    style: AppTextStyles.body.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    client.email,
+                                    style: AppTextStyles.caption,
+                                  ),
+                                  onTap: () {
+                                    setState(() => _selectedClient = client);
+                                    Navigator.pop(context);
+                                  },
+                                );
+                              },
                             ),
-                            subtitle: Text(
-                              client.email,
-                              style: AppTextStyles.caption,
-                            ),
-                            onTap: () {
-                              setState(() => _selectedClient = client);
-                              Navigator.pop(context);
-                            },
-                          );
-                        },
-                      ),
+                          ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             );
           },
         );
@@ -386,7 +476,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                     children: [
                       Icon(
                         Icons.auto_awesome,
-                        color: AppColors.primary,
+                        color: AppColors.accent,
                         size: 20,
                       ),
                       SizedBox(width: 8),
@@ -441,14 +531,14 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                         "Made with",
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(width: 6),
                       Icon(
                         Icons.auto_awesome,
                         size: 14,
-                        color: AppColors.primary.withOpacity(0.8),
+                        color: AppColors.accent,
                       ),
                       const SizedBox(width: 4),
                       const Text(
@@ -456,7 +546,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                          color: AppColors.textAccent,
                         ),
                       ),
                     ],
@@ -618,9 +708,11 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildClientSection(),
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: AppSpacing.lg),
+                _buildSettingsSection(),
+                const SizedBox(height: AppSpacing.lg),
                 _buildArticlesSection(),
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: AppSpacing.lg),
                 if (_invoiceItems.isNotEmpty) _buildSummarySection(),
                 const SizedBox(height: 100), // padding for FAB and bottom bar
               ],
@@ -785,13 +877,13 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
               child: Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: AppColors.primary.withOpacity(0.08),
+                    backgroundColor: AppColors.accent,
                     radius: 20,
                     child: Icon(
                       _selectedClient == null
                           ? Icons.person_add_rounded
                           : Icons.person_rounded,
-                      color: AppColors.primary,
+                      color: AppColors.white,
                       size: 20,
                     ),
                   ),
@@ -838,7 +930,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
     );
   }
 
-  Widget _buildArticlesSection() {
+  Widget _buildSettingsSection() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -853,41 +945,233 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Détails",
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                  letterSpacing: 0.5,
+              Expanded(
+                child: _buildGridField(
+                  label: "Date d'échéance",
+                  value: _dueDate != null ? DateFormat('dd-MM-yyyy').format(_dueDate!) : "dd-mm-yyyy",
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 14)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                    );
+                    if (date != null) setState(() => _dueDate = date);
+                  },
                 ),
               ),
-              GestureDetector(
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: _buildGridField(
+                  label: "Devise",
+                  value: _currency,
+                  isDropdown: true,
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.white,
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+                      builder: (context) {
+                        return SafeArea(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
+                                const SizedBox(height: AppSpacing.md),
+                                const Text("Select Currency", style: AppTextStyles.headingMedium),
+                                const SizedBox(height: AppSpacing.md),
+                                ..._currencies.map((currency) => ListTile(
+                                  title: Text(currency, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  trailing: _currency == currency ? const Icon(Icons.check_circle, color: AppColors.success) : null,
+                                  onTap: () {
+                                    setState(() => _currency = currency);
+                                    Navigator.pop(context);
+                                  },
+                                )),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGridField({required String label, required String value, required VoidCallback onTap, bool isDropdown = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: value == "dd mm yyyy" ? AppColors.textSecondary.withOpacity(0.5) : AppColors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: value == "dd mm yyyy" ? FontWeight.normal : FontWeight.w600,
+                  ),
+                ),
+                if (isDropdown)
+                  const Icon(Icons.keyboard_arrow_down, color: AppColors.textPrimary, size: 20),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGridInput({required String label, required TextEditingController controller}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildArticlesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            "ITEMS",
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              letterSpacing: 1.0,
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_invoiceItems.isEmpty)
+                _buildEmptyArticlesPlaceholder()
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _invoiceItems.length,
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1, color: AppColors.border),
+                  itemBuilder: (context, index) =>
+                      _buildArticleItem(index, _invoiceItems[index]),
+                ),
+              if (_invoiceItems.isNotEmpty)
+                const Divider(height: 1, color: AppColors.border),
+              // Add Item row at the bottom of the container
+              InkWell(
                 onTap: () => _openAddOrEditArticleSheet(),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Row(
+                borderRadius: BorderRadius.vertical(
+                  bottom: const Radius.circular(16),
+                  top: _invoiceItems.isEmpty ? const Radius.circular(16) : Radius.zero,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Row(
                     children: [
-                      Icon(Icons.add, size: 16, color: AppColors.primary),
-                      SizedBox(width: 4),
-                      Text(
-                        "Ajouter",
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.accent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.add,
+                          color: Colors.white, // Dark icon for lime background
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      const Text(
+                        "Ajouter Produit",
                         style: TextStyle(
-                          color: AppColors.primary,
+                          color: AppColors.textPrimary, // Changed from primary to textPrimary for black text
                           fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                          fontSize: 15,
                         ),
                       ),
                     ],
@@ -896,58 +1180,22 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          if (_invoiceItems.isEmpty)
-            _buildEmptyArticlesPlaceholder()
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _invoiceItems.length,
-              separatorBuilder: (context, index) =>
-                  const Divider(height: 24, color: AppColors.border),
-              itemBuilder: (context, index) =>
-                  _buildArticleItem(index, _invoiceItems[index]),
-            ),
-        ],
-      ),
+        ),
+        // Add Next Button just below as in mockup (Optional, just the style)
+      ],
     );
   }
 
   Widget _buildEmptyArticlesPlaceholder() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border, style: BorderStyle.solid),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.receipt_long_rounded,
-            size: 40,
-            color: AppColors.textSecondary.withOpacity(0.3),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            "Aucun article",
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "Ajoutez des produits ou services",
-            style: TextStyle(
-              color: AppColors.textSecondary.withOpacity(0.7),
-              fontSize: 12,
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      child: const Text(
+        "No items yet. Click below to add.",
+        style: TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 14,
+        ),
       ),
     );
   }
@@ -955,29 +1203,11 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
   Widget _buildArticleItem(int index, Map<String, dynamic> item) {
     return InkWell(
       onTap: () => _openAddOrEditArticleSheet(index: index, item: item),
-      borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 2),
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFB),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                "${item['quantity']}x",
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -985,14 +1215,14 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                   Text(
                     item['description'],
                     style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary, // Black like mockup
                       fontSize: 15,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "PU : ${item['price'].toStringAsFixed(2)} €",
+                    "${item['quantity']} x $_currency${item['price'].toStringAsFixed(2)}",
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,
@@ -1005,10 +1235,10 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  "${(item['quantity'] * item['price']).toStringAsFixed(2)} €",
+                  "$_currency${(item['quantity'] * item['price']).toStringAsFixed(2)}",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+                    color: AppColors.textPrimary,
                     fontSize: 15,
                   ),
                 ),
@@ -1018,7 +1248,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                   child: const Icon(
                     Icons.delete_outline_rounded,
                     color: Colors.redAccent,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
               ],
@@ -1045,9 +1275,9 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
       ),
       child: Column(
         children: [
-          _buildSummaryRow("Sous-total", "${subtotal.toStringAsFixed(2)} €"),
+          _buildSummaryRow("Sous-total", "$_currency${subtotal.toStringAsFixed(2)}"),
           const SizedBox(height: AppSpacing.sm),
-          _buildSummaryRow("TVA (20%)", "${tax.toStringAsFixed(2)} €"),
+          _buildSummaryRow("TVA (20%)", "$_currency${tax.toStringAsFixed(2)}"),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Divider(color: AppColors.border, height: 1),
@@ -1064,7 +1294,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                 ),
               ),
               Text(
-                "${total.toStringAsFixed(2)} €",
+                "$_currency${total.toStringAsFixed(2)}",
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w800,

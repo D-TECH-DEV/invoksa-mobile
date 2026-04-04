@@ -16,8 +16,9 @@ class InvoiceListItem extends StatelessWidget {
   final String amount;
   final String status;
   final VoidCallback? onChanged;
+  final Color borderStatus;
 
-  const InvoiceListItem({
+  InvoiceListItem({
     super.key,
     required this.invoice,
     required this.invoiceId,
@@ -26,7 +27,18 @@ class InvoiceListItem extends StatelessWidget {
     required this.amount,
     required this.status,
     this.onChanged,
-  });
+  }) : borderStatus = _getStatusColor(status);
+
+  static Color _getStatusColor(String status) {
+    switch (status) {
+      case "paid":
+        return Colors.green;
+      case "unpaid":
+        return Colors.orange;
+      default:
+        return Colors.red;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +62,7 @@ class InvoiceListItem extends StatelessWidget {
           border: Border.all(color: AppColors.border.withOpacity(0.5)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: AppColors.borderAccent.withOpacity(0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -114,7 +126,7 @@ class InvoiceListItem extends StatelessWidget {
         break;
 
       case "pending":
-        iconData = Icons.pending_actions;
+        iconData = Icons.pending;
         iconColor = Colors.orange;
         bgColor = AppColors.scaffoldBackground;
         break;
