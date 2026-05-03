@@ -11,9 +11,9 @@ class InvoiceRepository {
     return Invoice.fromJson(response);
   }
 
-  Future<List<Invoice>> getInvoice() async {
-    final response = await _apiService.get(ApiConstants.myInvoices);
-    if (response == []) {
+  Future<List<Invoice>> getInvoice({bool useCache = false}) async {
+    final response = await _apiService.get(ApiConstants.myInvoices, useCache: useCache);
+    if (response == null || (response is List && response.isEmpty)) {
       return [];
     }
 
@@ -22,8 +22,7 @@ class InvoiceRepository {
     }else if (response is Map) {
       return [Invoice.fromJson(response as Map<String, dynamic>)];
     }
-    throw("Erreur de formatage");
-
+    throw Exception("Erreur de formatage");
   }
 
   Future<Invoice> getById(int id) async{
@@ -47,5 +46,7 @@ class InvoiceRepository {
     return Invoice.fromJson(response);
   }
 
-
+  Future<void> delete(int id) async {
+    await _apiService.delete("${ApiConstants.invoices}/$id");
+  }
 }

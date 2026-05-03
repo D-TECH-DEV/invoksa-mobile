@@ -1,29 +1,25 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class ApiConstants {
-  //ApiConstants._();
-
-  // Base URL
-  static const String baseUrl = "http://10.77.247.206:8080/api";
-  // static const String baseUrl = "https://api.invoksa.com:8080/api";
-  // static const String baseUrl = "http://10.0.2.2:8080/api";
-
+  static String get baseUrl => dotenv.get('API_BASE_URL', fallback: "https://invoksa-api.you-soft.tech/api");
 
   // Timeout
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 
   // Endpoints
-  static const String login = "$baseUrl/auth/login";
-  static const String register = "/auth/register";
+  static String get login => "$baseUrl/auth/login";
+  static String get register => "/auth/register";
 
-  static const String clients = "/clients";
-  static const String myClients = "/clients/me";
+  static String get clients => "/clients";
+  static String get myClients => "/clients/me";
 
-  static const String invoices = "/invoices";
-  static const String myInvoices = "/invoices/me";
-  static const String invoicesClient = "/invoices/client";
-  static const String invoiceAi = "/invoices/ai";
+  static String get invoices => "/invoices";
+  static String get myInvoices => "/invoices/me";
+  static String get invoicesClient => "/invoices/client";
+  static String get invoiceAi => "/invoices/ai";
 
-  static const String dashboard = "/dashboard";
+  static String get dashboard => "/dashboard";
 
   // Headers
   static const String contentType = "application/json";

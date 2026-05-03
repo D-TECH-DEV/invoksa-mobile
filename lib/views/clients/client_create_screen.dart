@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:invoksa/models/client.dart';
 import 'package:invoksa/view_models/client_viewmodel.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_radius.dart';
@@ -6,7 +7,8 @@ import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 
 class ClientCreateScreen extends StatefulWidget {
-   const ClientCreateScreen({super.key});
+  final Client? client; // If null, it's "Create" mode, otherwise "Edit" mode.
+  const ClientCreateScreen({super.key, this.client});
 
   @override
   State<ClientCreateScreen> createState() => _ClientCreateScreenState();
@@ -14,14 +16,27 @@ class ClientCreateScreen extends StatefulWidget {
 
 class _ClientCreateScreenState extends State<ClientCreateScreen> {
   final ClientViewModel _clientViewModel = ClientViewModel();
-  TextEditingController nameController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController phoneController = TextEditingController();
+  late TextEditingController nameController;
+  late TextEditingController emailController;
+  late TextEditingController phoneController;
+
+  bool get isEditMode => widget.client != null;
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.client?.name ?? '');
+    emailController = TextEditingController(text: widget.client?.email ?? '');
+    phoneController = TextEditingController(text: widget.client?.phone ?? '');
+  }
 
   @override
   void dispose() {
-    super.dispose();
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
     _clientViewModel.dispose();
+    super.dispose();
   }
 
   @override
@@ -35,9 +50,9 @@ class _ClientCreateScreenState extends State<ClientCreateScreen> {
           icon: const Icon(Icons.chevron_left, color: Color(0xFF0D1B2A), size: 30),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Ajouter un Client',
-          style: TextStyle(
+        title: Text(
+          isEditMode ? 'Modifier le Client' : 'Ajouter un Client',
+          style: const TextStyle(
             color: Color(0xFF0D1B2A),
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -108,9 +123,9 @@ class _ClientCreateScreenState extends State<ClientCreateScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Informations du client',
-                  style: TextStyle(
+                Text(
+                  isEditMode ? 'Mettre à jour les informations' : 'Informations du client',
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF0D1B2A),
                     fontSize: 15,
@@ -132,7 +147,6 @@ class _ClientCreateScreenState extends State<ClientCreateScreen> {
     required String label,
     required String hint,
     required IconData icon,
-
     required TextEditingController controller,
     TextInputType? keyboardType,
   }) {
@@ -188,21 +202,21 @@ class _ClientCreateScreenState extends State<ClientCreateScreen> {
           decoration: BoxDecoration(
             color: hasError ? Colors.red.withOpacity(0.05) : Colors.white,
             borderRadius: AppRadius.medium,
-            border: Border.all(color: hasError ? Colors.red : AppColors.border, style: BorderStyle.none),
           ),
-          child: CustomPaint(
-            painter: DashPainter(),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Text(
-                hasError ? _clientViewModel.errorMessage! : 'Note : Vous pourrez modifier ces informations ultérieurement depuis le profil du client.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: hasError ? Colors.red : AppColors.textSecondary,
-                  fontStyle: hasError ? FontStyle.normal : FontStyle.italic,
-                  fontWeight: hasError ? FontWeight.bold : FontWeight.normal,
-                ),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              border: Border.all(color: hasError ? Colors.red : AppColors.border.withOpacity(0.5)),
+              borderRadius: AppRadius.medium,
+            ),
+            child: Text(
+              hasError ? _clientViewModel.errorMessage! : 'Note : Vous pourrez modifier ces informations ultérieurement depuis le profil du client.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: hasError ? Colors.red : AppColors.textSecondary,
+                fontStyle: hasError ? FontStyle.normal : FontStyle.italic,
+                fontWeight: hasError ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ),
@@ -235,15 +249,24 @@ class _ClientCreateScreenState extends State<ClientCreateScreen> {
               onPressed: _clientViewModel.isLoading
                   ? null
                   : () async {
-                final success =
-                await _clientViewModel.addClient(
+                bool success;
+                if (isEditMode) {
+                  success = await _clientViewModel.updateClient(
+                    widget.client!.id!,
+                    nameController.text.trim(),
+                    emailController.text.trim(),
+                    phoneController.text.trim(),
+                  );
+                } else {
+                  success = await _clientViewModel.addClient(
                     nameController.text.trim(),
                     emailController.text.trim(),
                     phoneController.text.trim()
-                );
+                  );
+                }
 
                 if (success && mounted) {
-                  Navigator.pop(context);
+                  Navigator.pop(context, true); // Return true to indicate change
                 }
               },
               child: _clientViewModel.isLoading
@@ -255,9 +278,9 @@ class _ClientCreateScreenState extends State<ClientCreateScreen> {
                   color: Color(0xFF0D1B2A),
                 ),
               )
-                  :  Text(
-                'Enregistrer le Client',
-                style: TextStyle(
+                  : Text(
+                isEditMode ? 'Mettre à jour le Client' : 'Enregistrer le Client',
+                style: const TextStyle(
                   color: Color(0xFF0D1B2A),
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -268,23 +291,5 @@ class _ClientCreateScreenState extends State<ClientCreateScreen> {
         );
       },
     );
-  }}
-
-class DashPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..color = AppColors.border
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    final RRect rRect = RRect.fromLTRBR(0, 0, size.width, size.height, const Radius.circular(12));
-    final Path path = Path()..addRRect(rRect);
-
-    // Simplification for the dashed border
-     canvas.drawPath(path, paint); // For now standard border, dashed is more complex to implement manually
   }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

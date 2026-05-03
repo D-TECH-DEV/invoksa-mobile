@@ -3,9 +3,18 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import 'token_service.dart';
+import 'cache_service.dart';
 
 class ApiService {
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
+
   final TokenService _tokenService = TokenService();
+  final CacheService _cacheService = CacheService();
+
+  // Cache en mémoire (très rapide)
+  static final Map<String, dynamic> _memoryCache = {};
 
   //  Headers dynamiques (toujours à jour)
   Future<Map<String, String>> _headers() async {
@@ -24,7 +33,20 @@ class ApiService {
   }
 
   // GET
-  Future<dynamic> get(String endpoint) async {
+  Future<dynamic> get(String endpoint, {bool useCache = false}) async {
+    if (useCache) {
+      // 1. Check memory cache
+      if (_memoryCache.containsKey(endpoint)) {
+        return _memoryCache[endpoint];
+      }
+      // 2. Check persistent cache
+      final cached = await _cacheService.getCache(endpoint);
+      if (cached != null) {
+        _memoryCache[endpoint] = cached;
+        return cached;
+      }
+    }
+
     final response = await http
         .get(
       Uri.parse("${ApiConstants.baseUrl}$endpoint"),
@@ -32,7 +54,20 @@ class ApiService {
     )
         .timeout(ApiConstants.connectTimeout);
 
-    return _handleResponse(response);
+    final data = _handleResponse(response);
+
+    if (useCache) {
+      _memoryCache[endpoint] = data;
+      await _cacheService.setCache(endpoint, data);
+    }
+
+    return data;
+  }
+
+  // Clear Cache
+  Future<void> clearCache() async {
+    _memoryCache.clear();
+    await _cacheService.clearAllCache();
   }
 
   // GET BYTES
@@ -57,7 +92,7 @@ class ApiService {
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
     final response = await http
         .post(
-      Uri.parse("${ApiConstants.baseUrl}$endpoint"),
+      Uri.parse("${ApiConstants.baseUrl.startsWith('http') ? '' : ApiConstants.baseUrl}$endpoint".startsWith('http') ? endpoint : "${ApiConstants.baseUrl}$endpoint"),
       headers: await _headers(),
       body: jsonEncode(data),
     )

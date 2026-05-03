@@ -1352,86 +1352,124 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
               ),
             ],
           ),
-          child: SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                disabledBackgroundColor: AppColors.primary.withOpacity(0.3),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              onPressed: !canSave || isLoading
-                  ? null
-                  : () async {
-                      if (widget.invoice != null) {
-                        // UPDATE INVOICE
-                        // Currently InvoiceViewmodel does not have an updateInvoice method,
-                        // so we show a snackbar saying it's not supported yet or use a placeholder.
-                        // Assuming backend/viewmodel needs to be updated to support 'updateInvoice'.
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              "La modification de facture n'est pas encore supportée par le serveur.",
-                            ),
-                          ),
-                        );
-                        Navigator.pop(context, true);
-                      } else {
-                        final success = await _invoiceViewmodel.addInvoice(
-                          _selectedClient!.toJson(),
-                          _invoiceItems,
-                        );
-
-                        if (success && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Facture créée avec succès"),
-                            ),
-                          );
-                          Navigator.pop(
-                            context,
-                            true,
-                          ); // Return true to indicate success
-                        } else if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                _invoiceViewmodel.errorMessage ??
-                                    "Erreur lors de la création",
-                              ),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      } // end if-else widget.invoice
-                    }, // end async onPressed
-              child: isLoading
-                  ? const SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Text(
-                      widget.invoice == null
-                          ? "Enregistrer la facture"
-                          : "Enregistrer les modifications",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    disabledBackgroundColor: AppColors.primary.withOpacity(0.3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-            ),
+                    elevation: 0,
+                  ),
+                  onPressed: !canSave || isLoading
+                      ? null
+                      : () async => await _performSave(500), // 500 = PENDING
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          widget.invoice == null
+                              ? "Enregistrer la facture"
+                              : "Enregistrer les modifications",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    side: BorderSide(
+                        color: canSave && !isLoading
+                            ? AppColors.primary.withOpacity(0.5)
+                            : Colors.grey.withOpacity(0.3),
+                        width: 1.5),
+                  ),
+                  onPressed: !canSave || isLoading
+                      ? null
+                      : () async => await _performSave(100), // 100 = DRAFT
+                  child: const Text(
+                    "Enregistrer comme brouillon",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
     );
+  }
+
+  Future<void> _performSave(int statusCode) async {
+    if (widget.invoice != null) {
+      final success = await _invoiceViewmodel.updateInvoice(
+        widget.invoice!.id!,
+        _selectedClient!.toJson(),
+        _invoiceItems,
+        statusCode: statusCode,
+      );
+
+      if (success && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Facture mise à jour avec succès")),
+        );
+        Navigator.pop(context, true);
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                _invoiceViewmodel.errorMessage ?? "Erreur lors de la mise à jour"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else {
+      final success = await _invoiceViewmodel.addInvoice(
+        _selectedClient!.toJson(),
+        _invoiceItems,
+        statusCode: statusCode,
+      );
+
+      if (success && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Facture créée avec succès")),
+        );
+        Navigator.pop(context, true);
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                _invoiceViewmodel.errorMessage ?? "Erreur lors de la création"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

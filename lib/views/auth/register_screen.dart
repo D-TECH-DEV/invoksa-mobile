@@ -107,14 +107,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     icon: Icons.mail_outline,
                     controller: _emailController,
                   ),
-
-                  const SizedBox(height: AppSpacing.lg),
-                  AuthTextField(
-                    label: 'Adresse Email',
-                    hint: 'nom@exemple.com',
-                    icon: Icons.mail_outline,
-                    controller: _emailController,
-                  ),
                   
                   const SizedBox(height: AppSpacing.lg),
                   

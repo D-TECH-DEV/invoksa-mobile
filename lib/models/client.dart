@@ -22,13 +22,15 @@ class Client {
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
-  factory Client.fromJson(Map<String, dynamic> json) => Client(
-    id: json['id'],
-    name: json['name'] ?? '----',
-    email: json['email'] ?? '-----',
-    phone: json['phone'] ?? '',
-    address: json['address'],
-  );
+  factory Client.fromJson(Map<String, dynamic> json) {
+    return Client(
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? 'Inconnu',
+      email: json['email']?.toString() ?? '',
+      phone: json['phone']?.toString() ?? '',
+      address: json['address']?.toString() ?? '',
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,

@@ -41,15 +41,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 60),
                   
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(0),
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6),
+                      color: Colors.transparent,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Icon(
-                      Icons.bolt_rounded,
-                      size: 40,
-                      color: Color(0xFF0D1B2A),
+                    child: Image.asset(
+                      'assets/images/app/logo.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
                   
@@ -130,7 +131,42 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () => AppUtils.showComingSoonSnackBar(context, "Mot de passe oublié"),
+                      onPressed: () {
+                        final resetController = TextEditingController();
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Réinitialiser le mot de passe'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('Entrez votre email pour recevoir un lien de réinitialisation.'),
+                                const SizedBox(height: 16),
+                                TextField(
+                                  controller: resetController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Email',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+                              ElevatedButton(
+                                onPressed: () {
+                                  // Simuler l'envoi d'email
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Lien de réinitialisation envoyé !')),
+                                  );
+                                },
+                                child: const Text('Envoyer'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                       child: const Text(
                         'Mot de passe oublié ?',
                         style: TextStyle(

@@ -1,11 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:invoksa/l10n/app_localizations.dart';
 import 'core/services/storage_service.dart';
+import 'core/services/notification_service.dart';
 import 'core/routes/app_routes.dart';
 import 'core/routes/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    // Falls back to default values defined in ApiConstants
+  }
+
+  // Initialize Hive for offline caching
+  await Hive.initFlutter();
+  await Hive.openBox('offlineCache');
+
+  // Initialize notifications
+  await NotificationService().init();
+  
   final storage = StorageService();
   final initialLang = await storage.getLanguage();
   runApp(MyApp(initialLocale: Locale(initialLang)));
@@ -43,16 +61,8 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       locale: _locale,
-      supportedLocales: const [
-        Locale('fr'),
-        Locale('en'),
-        Locale('ar'),
-      ],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       debugShowCheckedModeBanner: false,
       title: 'Invoksa',
       theme: ThemeData(
@@ -131,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
           // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
           // action in the IDE, or press "p" in the console), to see the
           // wireframe for each widget.
-          mainAxisAlignment: .center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('You have pushed the button this many times:'),
             Text(

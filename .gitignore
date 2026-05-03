@@ -1,3 +1,7 @@
+# Custom environment variables
+.env
+.env.*
+
 # Miscellaneous
 *.class
 *.log

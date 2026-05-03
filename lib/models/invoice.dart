@@ -20,8 +20,35 @@ class Invoice {
 
   String get currentStatusName {
     if (statusCode == 200 || status.toUpperCase() == "PAID") return "PAID";
+    if (statusCode == 100 || status.toUpperCase() == "DRAFT") return "DRAFT";
     if (statusCode == 500 || status.toUpperCase() == "PENDING") return "PENDING";
     return status;
+  }
+
+  String get statusLabel {
+    switch (currentStatusName) {
+      case "PAID":
+        return "Payé";
+      case "DRAFT":
+        return "Brouillon";
+      case "PENDING":
+        return "En attente";
+      default:
+        return "Inconnu";
+    }
+  }
+
+  Color get statusColor {
+    switch (currentStatusName) {
+      case "PAID":
+        return Colors.green;
+      case "DRAFT":
+        return Colors.grey;
+      case "PENDING":
+        return Colors.orange;
+      default:
+        return Colors.red;
+    }
   }
 
   Invoice({
@@ -46,31 +73,43 @@ class Invoice {
   String get formattedDate =>
       DateFormat('dd/MM/yyyy HH:mm').format(createdAt!);
 
-  factory Invoice.fromJson(Map<String, dynamic> json) => Invoice(
-    id: json['id'],
-    total: (json['total'] as num?)?.toDouble() ?? 0,
-    status: json['status'] is int 
-        ? (json['status'] == 200 ? "PAID" : "PENDING")
-        : (json['status']?.toString() ?? "PENDING"),
-    statusCode: json['status'] is int ? json['status'] : (json['status'] == "PAID" ? 200 : 500),
-    number: json["number"] ?? "Non spécifié",
-    token: json['token'] ?? "",
-    createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
-    updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt']) : null,
-    items: json['items'] != null
-        ? List<InvoiceItem>.from(json['items'].map((x) => InvoiceItem.fromJson(x)))
-        : [],
-    deleted: json['deleted'] ?? 0,
-    client: json['client'] != null ? Client.fromJson(json['client']) : null,
-    dueDate: json['dueDate'] != null ? DateTime.tryParse(json['dueDate']) : null,
-    currency: json['currency'],
-  );
+  factory Invoice.fromJson(Map<String, dynamic> json) {
+    final statusVal = json['status'];
+    String statusStr = "PENDING";
+    int? statusCode;
+
+    if (statusVal is int) {
+      statusCode = statusVal;
+      statusStr = (statusVal == 200 ? "PAID" : (statusVal == 100 ? "DRAFT" : "PENDING"));
+    } else {
+      statusStr = statusVal?.toString() ?? "PENDING";
+      statusCode = (statusStr == "PAID" ? 200 : (statusStr == "DRAFT" ? 100 : 500));
+    }
+
+    return Invoice(
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+      status: statusStr,
+      statusCode: statusCode,
+      number: json["number"]?.toString() ?? "Non spécifié",
+      token: json['token']?.toString() ?? "",
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'].toString()) : null,
+      items: json['items'] != null && json['items'] is List
+          ? List<InvoiceItem>.from((json['items'] as List).map((x) => InvoiceItem.fromJson(x as Map<String, dynamic>)))
+          : [],
+      deleted: json['deleted'] is int ? json['deleted'] : (int.tryParse(json['deleted']?.toString() ?? '0') ?? 0),
+      client: json['client'] != null ? Client.fromJson(json['client'] as Map<String, dynamic>) : null,
+      dueDate: json['dueDate'] != null ? DateTime.tryParse(json['dueDate'].toString()) : null,
+      currency: json['currency']?.toString(),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'client': client != null ? {'id': client!.id} : null,
     'total': total,
-    'status': statusCode ?? (status == "PAID" ? 200 : 500), 
+    'status': statusCode ?? (status == "PAID" ? 200 : (status == "DRAFT" ? 100 : 500)),
     'createdAt': createdAt?.toIso8601String(),
     'updatedAt': updatedAt?.toIso8601String(),
     'items': (items ?? []).map((x) => x.toJson()).toList(),

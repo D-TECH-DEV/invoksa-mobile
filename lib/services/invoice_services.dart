@@ -34,6 +34,28 @@ class InvoiceServices {
     return invoiceCreated;
   }
 
+  Future<Invoice> updateInvoice(
+    int id,
+    Map<String, dynamic> clientSelected,
+    List<Map<String, dynamic>> items,
+    int statusCode,
+  ) async {
+    List<InvoiceItem> invoiceItems = items
+        .map((item) => InvoiceItem.fromJson(item))
+        .toList();
+
+    Client client = Client.fromJson(clientSelected);
+
+    Invoice invoiceToUpdate = Invoice(
+      id: id,
+      client: client,
+      items: invoiceItems,
+      statusCode: statusCode, // use provided code
+    );
+
+    return await _invoiceRepository.update(invoiceToUpdate, id);
+  }
+
   Future<Invoice> sendInvoiceAi(String description) async {
     String lang = "fr";
     String devise = "F CFA";
@@ -48,8 +70,19 @@ class InvoiceServices {
     return invoiceUpdated;
   }
 
-  Future<Uint8List> getInvoicePdf(int id) async {
+  Future<Uint8List> getInvoicePdf(int id, {String? color, String? name, String? tel, String? email, String? address, String? legalMentions}) async {
     final ApiService apiService = ApiService();
-    return await apiService.getBytes("/invoices/$id/pdf");
+    String query = "?";
+    if (color != null && color.isNotEmpty) query += "color=${Uri.encodeComponent(color)}&";
+    if (name != null && name.isNotEmpty) query += "name=${Uri.encodeComponent(name)}&";
+    if (tel != null && tel.isNotEmpty) query += "tel=${Uri.encodeComponent(tel)}&";
+    if (email != null && email.isNotEmpty) query += "email=${Uri.encodeComponent(email)}&";
+    if (address != null && address.isNotEmpty) query += "address=${Uri.encodeComponent(address)}&";
+    if (legalMentions != null && legalMentions.isNotEmpty) query += "legalMentions=${Uri.encodeComponent(legalMentions)}&";
+    
+    if (query == "?") query = "";
+    else query = query.substring(0, query.length - 1);
+
+    return await apiService.getBytes("/invoices/$id/pdf$query");
   }
 }

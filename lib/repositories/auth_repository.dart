@@ -1,61 +1,53 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:invoksa/core/constants/api_constants.dart';
+import 'package:invoksa/core/services/api_service.dart';
 import '../core/services/token_service.dart';
 import '../models/user.dart';
 
 class AuthRepository {
+  final ApiService _apiService = ApiService();
   final TokenService _tokenService = TokenService();
 
   Future<Map<String, dynamic>> login(String username, String email, String password) async {
-    final response = await http.post(
-      Uri.parse(ApiConstants.login),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        "username": username,
-        "email": email,
-        "password": password,
-      }),
-    );
+    final response = await _apiService.post(ApiConstants.login, {
+      "username": username,
+      "email": email,
+      "password": password,
+    });
 
-    final Map<String, dynamic> data = jsonDecode(response.body);
-
-    if (response.statusCode == 200) {
-      _tokenService.saveToken(data['token']);
+    if (response.containsKey('token')) {
+      await _tokenService.saveToken(response['token']);
       return {
-        "user": User.fromJson(data['user']),
-        //"token": data['token'],
+        "user": User.fromJson(response['user']),
       };
     } else {
-      throw Exception(data['error'] ?? "Email ou mot de passe incorrect !");
+      throw Exception("Réponse invalide du serveur");
     }
   }
 
   Future<User> register(String username, String email, String password) async {
-    final response = await http.post(
-      Uri.parse(ApiConstants.register),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        "username": username,
-        "email": email,
-        "password": password,
-        "role": "ROLE_USER"
-      }),
-    );
+    final response = await _apiService.post(ApiConstants.register, {
+      "username": username,
+      "email": email,
+      "password": password,
+      "role": "ROLE_USER"
+    });
 
-    final Map<String, dynamic> data = jsonDecode(response.body);
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      if (data.containsKey('user')) {
-         return User.fromJson(data['user']);
-      }
-      return User.fromJson(data);
-    } else {
-      throw Exception(data['message'] ?? "Erreur lors de l'inscription");
+    if (response.containsKey('user')) {
+       return User.fromJson(response['user']);
     }
+    return User.fromJson(response);
+  }
+
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    await _apiService.post("/auth/change-password", {
+      "oldPassword": oldPassword,
+      "newPassword": newPassword,
+    });
+  }
+
+  Future<void> deleteAccount() async {
+    await _apiService.delete("/auth/me");
   }
 }

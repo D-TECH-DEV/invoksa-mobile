@@ -16,6 +16,7 @@ class InvoiceListItem extends StatelessWidget {
   final String amount;
   final String status;
   final VoidCallback? onChanged;
+  final VoidCallback? onDelete;
   final Color borderStatus;
 
   InvoiceListItem({
@@ -27,18 +28,8 @@ class InvoiceListItem extends StatelessWidget {
     required this.amount,
     required this.status,
     this.onChanged,
-  }) : borderStatus = _getStatusColor(status);
-
-  static Color _getStatusColor(String status) {
-    switch (status) {
-      case "paid":
-        return Colors.green;
-      case "unpaid":
-        return Colors.orange;
-      default:
-        return Colors.red;
-    }
-  }
+    this.onDelete,
+  }) : borderStatus = invoice.statusColor;
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +98,48 @@ class InvoiceListItem extends StatelessWidget {
                 _buildStatusBadge(),
               ],
             ),
+            const SizedBox(width: AppSpacing.sm),
+            PopupMenuButton<String>(
+              padding: EdgeInsets.zero,
+              icon: const Icon(Icons.more_vert, color: AppColors.textSecondary, size: 20),
+              onSelected: (value) async {
+                if (value == 'delete' && onDelete != null) {
+                  onDelete!();
+                } else if (value == 'edit') {
+                  final result = await Navigator.pushNamed(
+                    context,
+                    AppRoutes.invoiceCreate,
+                    arguments: invoice,
+                  );
+                  if (result == true && onChanged != null) {
+                    onChanged!();
+                  }
+                }
+              },
+              itemBuilder: (context) => [
+                if (invoice.currentStatusName != 'PAID')
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
+                        SizedBox(width: 8),
+                        Text('Modifier'),
+                      ],
+                    ),
+                  ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                      SizedBox(width: 8),
+                      Text('Supprimer', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -115,32 +148,21 @@ class InvoiceListItem extends StatelessWidget {
 
   Widget _buildIcon() {
     late IconData iconData;
-    late Color iconColor;
-    late Color bgColor;
+    final iconColor = invoice.statusColor;
+    const bgColor = AppColors.scaffoldBackground;
 
-    switch (status) {
-      case "paid":
+    switch (invoice.currentStatusName) {
+      case "PAID":
         iconData = Icons.check;
-        iconColor = Colors.green;
-        bgColor = AppColors.scaffoldBackground;
         break;
-
-      case "pending":
+      case "DRAFT":
+        iconData = Icons.edit_document;
+        break;
+      case "PENDING":
         iconData = Icons.pending;
-        iconColor = Colors.orange;
-        bgColor = AppColors.scaffoldBackground;
         break;
-      case "unpaid":
-        iconData = Icons.warning;
-        iconColor = Colors.red;
-        bgColor = AppColors.scaffoldBackground;
-        break;
-
-
       default:
         iconData = Icons.help_outline;
-        iconColor = AppColors.textPrimary;
-        bgColor = AppColors.scaffoldBackground;
     }
 
     return Container(
@@ -156,34 +178,16 @@ class InvoiceListItem extends StatelessWidget {
       child: Icon(iconData, color: iconColor, size: 18),
     );
   }
+
   Widget _buildStatusBadge() {
-    String text;
+    final text = invoice.statusLabel;
+    final textColor = invoice.statusColor;
     Color? bgColor;
-    Color textColor;
 
-    switch (status) {
-      case "paid":
-        text = 'Payé';
-        bgColor = null;
-        textColor = Colors.green;
-        break;
-
-      case "pending":
-        text = 'En attente';
-        bgColor = null;
-        textColor = Colors.orange;
-        break;
-
-      case "unpaid":
-        text = 'Non payé';
-        bgColor = Colors.white;
-        textColor = Colors.red;
-        break;
-
-      default:
-        text = 'Inconnu';
-        bgColor = Colors.grey.shade300;
-        textColor = Colors.black;
+    if (invoice.currentStatusName == 'DRAFT') {
+      bgColor = Colors.grey.shade200;
+    } else if (invoice.currentStatusName == 'UNPAID') {
+      bgColor = Colors.white;
     }
 
     return Container(

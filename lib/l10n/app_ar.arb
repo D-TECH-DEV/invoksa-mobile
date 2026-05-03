@@ -1,0 +1,13 @@
+{
+  "@@locale": "ar",
+  "appTitle": "إنفوكسا",
+  "home": "الرئيسية",
+  "invoices": "الفواتير",
+  "clients": "العملاء",
+  "settings": "الإعدادات",
+  "draft": "مسودة",
+  "pending": "قيد الانتظار",
+  "paid": "مدفوع",
+  "changeLanguage": "تغيير اللغة",
+  "logout": "تسجيل خروج"
+}

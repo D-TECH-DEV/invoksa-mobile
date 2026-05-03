@@ -298,14 +298,45 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           clientName: invoice.client?.name ?? "Client inconnu",
           date: invoice.formattedDate,
           amount: '${invoice.total} F',
-          status: invoice.status,
+          status: invoice.currentStatusName, // Use currentStatusName to get parsed state
           invoice: invoice,
           onChanged: () {
             _invoiceViewmodel.getInvoices();
           },
+          onDelete: () {
+            _showDeleteConfirmationDialog(invoice.id!);
+          },
         );
 
       },
+    );
+  }
+
+  void _showDeleteConfirmationDialog(int invoiceId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer la facture ?'),
+        content: const Text('Voulez-vous vraiment supprimer cette facture ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context), 
+            child: const Text('Annuler')
+          ),
+          TextButton(
+            onPressed: () async {
+              final success = await _invoiceViewmodel.deleteInvoice(invoiceId);
+              if (success && mounted) {
+                Navigator.pop(context); // Close dialog
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Facture supprimée')),
+                );
+              }
+            },
+            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 

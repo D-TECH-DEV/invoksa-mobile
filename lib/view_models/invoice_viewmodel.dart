@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:invoksa/core/constants/api_constants.dart';
@@ -9,12 +11,16 @@ import 'package:invoksa/models/invoice_item.dart';
 import 'package:invoksa/repositories/client_repository.dart';
 import 'package:invoksa/repositories/invoice_repository.dart';
 import 'package:invoksa/services/invoice_services.dart';
+import 'package:invoksa/core/services/storage_service.dart';
+import 'package:invoksa/core/services/notification_service.dart';
+import 'package:invoksa/core/utils/error_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
 class InvoiceViewmodel extends ChangeNotifier {
   final InvoiceRepository _invoiceRepository = InvoiceRepository();
   final InvoiceServices _invoiceServices = InvoiceServices();
   final ClientRepository _clientRepository = ClientRepository();
+  final StorageService _companyStorageService = StorageService();
   bool isLoading = false;
   String? errorMessage;
 
@@ -34,15 +40,20 @@ class InvoiceViewmodel extends ChangeNotifier {
   /// Option de tri active
   InvoiceSortOption _currentSortOption = InvoiceSortOption.newest;
 
-  Future <bool> addInvoice(Map<String, dynamic> client, List<Map<String, dynamic>> invoiceItems) async {
+  Future <bool> addInvoice(Map<String, dynamic> client, List<Map<String, dynamic>> invoiceItems, {int statusCode = 500}) async {
     try {
       isLoading = true;
       errorMessage = null;
       notifyListeners();
 
-      final newInvoice = await _invoiceServices.createInvoice(client, invoiceItems, 500);
-      //invoices.insert(0, newInvoice);
+      final newInvoice = await _invoiceServices.createInvoice(client, invoiceItems, statusCode);
       await loadClients();
+
+      if (statusCode == 500) { // PENDING
+        // Schedule reminder for 30 days after creation
+        final dueDate = newInvoice.createdAt?.add(const Duration(days: 30)) ?? DateTime.now().add(const Duration(days: 30));
+        await NotificationService().scheduleInvoiceReminder(newInvoice.id!, newInvoice.number ?? "Facture", dueDate);
+      }
 
       isLoading = false;
       errorMessage = null;
@@ -50,7 +61,37 @@ class InvoiceViewmodel extends ChangeNotifier {
       return true;
 
     } catch (e) {
-      errorMessage = e.toString().replaceAll("", "");
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateInvoice(int id, Map<String, dynamic> client, List<Map<String, dynamic>> invoiceItems, {int statusCode = 500}) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      final updatedInvoice = await _invoiceServices.updateInvoice(id, client, invoiceItems, statusCode);
+      
+      final index = allInvoices.indexWhere((inv) => inv.id == id);
+      if (index != -1) {
+        allInvoices[index] = updatedInvoice;
+      }
+      
+      if (invoice?.id == id) {
+        invoice = updatedInvoice;
+      }
+
+      _applyFilters();
+
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
       isLoading = false;
       notifyListeners();
       return false;
@@ -63,7 +104,24 @@ class InvoiceViewmodel extends ChangeNotifier {
       errorMessage = null;
       notifyListeners();
 
-      allInvoices = await _invoiceRepository.getInvoice();
+      final box = Hive.box('offlineCache');
+
+      try {
+        allInvoices = await _invoiceRepository.getInvoice();
+        // save to Hive
+        final jsonList = allInvoices.map((e) => e.toJson()).toList();
+        await box.put('invoices', jsonEncode(jsonList));
+      } catch (e) {
+        // Fallback to cache
+        final cached = box.get('invoices');
+        if (cached != null) {
+          final List<dynamic> decoded = jsonDecode(cached);
+          allInvoices = decoded.map((e) => Invoice.fromJson(e)).toList();
+        } else {
+          rethrow; // throw if no network and no cache
+        }
+      }
+
       invoices = List.from(allInvoices);
 
       isLoading = false;
@@ -71,12 +129,11 @@ class InvoiceViewmodel extends ChangeNotifier {
       return true;
     } catch (e) {
       isLoading = false;
-      errorMessage = e.toString();
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
       notifyListeners();
       return false;
     }
   }
-
   Future<bool> loadClients() async {
     try {
       isLoading = true;
@@ -87,10 +144,9 @@ class InvoiceViewmodel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
       return true;
-
     } catch (e) {
       isLoading = false;
-      errorMessage = e.toString();
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
       notifyListeners();
       return false;
     }
@@ -110,7 +166,7 @@ class InvoiceViewmodel extends ChangeNotifier {
       return true;
     } catch(e) {
       isLoading = false;
-      errorMessage = e.toString().replaceAll("Error", "");
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
       notifyListeners();
       return false;
     }
@@ -135,8 +191,7 @@ class InvoiceViewmodel extends ChangeNotifier {
       return true;
     } catch(e) {
       isLoading = false;
-      errorMessage = "Erreur IA: $e";
-      debugPrint("AI Extraction Error: $e");
+      errorMessage = "Erreur IA: ${ErrorHandler.getFriendlyMessage(e)}";
       notifyListeners();
       return false;
     }
@@ -165,14 +220,77 @@ class InvoiceViewmodel extends ChangeNotifier {
         invoice = updatedInvoice;
       }
 
+      // Cancel reminder if it's paid
+      await NotificationService().flutterLocalNotificationsPlugin.cancel(id: currentInvoice.id!);
+
       _applyFilters();
 
       isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      errorMessage = e.toString();
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
       isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> markAsPending(Invoice currentInvoice) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      if (currentInvoice.id == null) {
+        throw Exception("ID de facture manquant");
+      }
+
+      currentInvoice.statusCode = 500; // PENDING
+      Invoice updatedInvoice = await _invoiceServices.updateInvoice(
+        currentInvoice.id!,
+        currentInvoice.client!.toJson(),
+        (currentInvoice.items ?? []).map((e) => e.toJson()).toList(),
+        500,
+      );
+
+      final index = allInvoices.indexWhere((inv) => inv.id == currentInvoice.id);
+      if (index != -1) {
+        allInvoices[index] = updatedInvoice;
+      }
+      
+      if (invoice?.id == currentInvoice.id) {
+        invoice = updatedInvoice;
+      }
+
+      _applyFilters();
+
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteInvoice(int id) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+
+      await _invoiceRepository.delete(id);
+      allInvoices.removeWhere((inv) => inv.id == id);
+      _applyFilters();
+
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      isLoading = false;
+      errorMessage = e.toString();
       notifyListeners();
       return false;
     }
@@ -188,7 +306,18 @@ class InvoiceViewmodel extends ChangeNotifier {
         throw Exception("ID de facture invalide");
       }
 
-      final bytes = await _invoiceServices.getInvoicePdf(invoice.id!);
+      // Add Company Info for PDF configuration
+      final info = await _companyStorageService.getCompanyInfo();
+
+      final bytes = await _invoiceServices.getInvoicePdf(
+        invoice.id!,
+        color: info['color'], 
+        name: info['name'], 
+        tel: info['phone'], 
+        email: info['email'], 
+        address: info['address'], 
+        legalMentions: info['legal']
+      );
       final filename = "Facture_${invoice.number ?? invoice.id}.pdf";
 
       if (kIsWeb) {
@@ -217,7 +346,7 @@ class InvoiceViewmodel extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       isLoading = false;
-      errorMessage = "Erreur de téléchargement: $e";
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
       notifyListeners();
     }
   }

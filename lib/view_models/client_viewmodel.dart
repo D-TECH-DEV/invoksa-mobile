@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:invoksa/models/client.dart';
 import 'package:invoksa/models/invoice.dart';
 import 'package:invoksa/repositories/client_repository.dart';
+import '../core/utils/validators.dart';
+import '../core/utils/error_handler.dart';
 
 class ClientViewModel extends ChangeNotifier {
   final ClientRepository _clientRepository = ClientRepository();
@@ -46,17 +50,15 @@ class ClientViewModel extends ChangeNotifier {
       isLoading = true;
       notifyListeners();
 
-      final result = await _clientRepository.getMyClients();
-      _allClients = result;
-      clients = List.from(_allClients); // réinitialise aussi la liste affichée
-
+      _allClients = await _clientRepository.getMyClients();
+      clients = List.from(_allClients);
+      
       isLoading = false;
       notifyListeners();
       return true;
-
     } catch (e) {
       isLoading = false;
-      errorMessage = e.toString();
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
       notifyListeners();
       return false;
     }
@@ -64,6 +66,16 @@ class ClientViewModel extends ChangeNotifier {
 
   Future<bool> addClient(String name, String email, String phone) async {
     try {
+      final nameError = AppValidators.validateRequired(name, "Le nom");
+      final emailError = AppValidators.validateEmail(email);
+      final phoneError = AppValidators.validatePhone(phone);
+
+      if (nameError != null || emailError != null || phoneError != null) {
+        errorMessage = nameError ?? emailError ?? phoneError;
+        notifyListeners();
+        return false;
+      }
+
       isLoading = true;
       notifyListeners();
 
@@ -82,7 +94,62 @@ class ClientViewModel extends ChangeNotifier {
 
     } catch (e) {
       isLoading = false;
-      errorMessage = e.toString();
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateClient(int id, String name, String email, String phone) async {
+    try {
+      final nameError = AppValidators.validateRequired(name, "Le nom");
+      final emailError = AppValidators.validateEmail(email);
+      final phoneError = AppValidators.validatePhone(phone);
+
+      if (nameError != null || emailError != null || phoneError != null) {
+        errorMessage = nameError ?? emailError ?? phoneError;
+        notifyListeners();
+        return false;
+      }
+
+      isLoading = true;
+      notifyListeners();
+
+      final updatedClient = await _clientRepository.updateClient(id, name, email, phone);
+      
+      final index = _allClients.indexWhere((c) => c.id == id);
+      if (index != -1) {
+        _allClients[index] = updatedClient;
+        searchClients(searchQuery); // Refresh display list
+      }
+
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      isLoading = false;
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteClient(int id) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+
+      await _clientRepository.deleteClient(id);
+      
+      _allClients.removeWhere((c) => c.id == id);
+      searchClients(searchQuery);
+
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      isLoading = false;
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
       notifyListeners();
       return false;
     }
@@ -102,7 +169,8 @@ class ClientViewModel extends ChangeNotifier {
       return true;
     } catch(e) {
       isLoading = false;
-      errorMessage = e.toString().replaceAll("error", "");
+      errorMessage = ErrorHandler.getFriendlyMessage(e);
+      notifyListeners();
     }
     return false;
   }

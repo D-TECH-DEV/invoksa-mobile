@@ -41,6 +41,10 @@ class InvoiceHeaderSection extends StatelessWidget {
         text = 'Paid';
         color = AppColors.success;
         break;
+      case 'DRAFT':
+        text = 'Draft';
+        color = AppColors.slate400;
+        break;
       case 'PENDING':
         text = 'Unpaid';
         color = AppColors.slate600;

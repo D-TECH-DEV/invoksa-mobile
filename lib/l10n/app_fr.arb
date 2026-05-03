@@ -1,0 +1,13 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Invoksa",
+  "home": "Accueil",
+  "invoices": "Factures",
+  "clients": "Clients",
+  "settings": "Paramètres",
+  "draft": "Brouillon",
+  "pending": "En attente",
+  "paid": "Payé",
+  "changeLanguage": "Changer de langue",
+  "logout": "Déconnexion"
+}

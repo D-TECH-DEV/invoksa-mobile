@@ -87,6 +87,58 @@ class ClientHeaderDetail extends StatelessWidget {
   }
 }
 
+class ClientSummaryCards extends StatelessWidget {
+  final double totalBilled;
+  final double totalPaid;
+  final double totalPending;
+
+  const ClientSummaryCards({
+    Key? key,
+    required this.totalBilled,
+    required this.totalPaid,
+    required this.totalPending,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _buildCard('Facturé', '${totalBilled.toInt()} F', AppColors.textPrimary),
+        const SizedBox(width: AppSpacing.sm),
+        _buildCard('Payé', '${totalPaid.toInt()} F', AppColors.accent),
+        const SizedBox(width: AppSpacing.sm),
+        _buildCard('Dû', '${totalPending.toInt()} F', Colors.orange),
+      ],
+    );
+  }
+
+  Widget _buildCard(String label, String value, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.05),
+          borderRadius: AppRadius.medium,
+          border: Border.all(color: color.withOpacity(0.1)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: TextStyle(fontSize: 11, color: color.withOpacity(0.7), fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class ClientInvoiceItem extends StatelessWidget {
   final String invoiceId;
   final String date;
