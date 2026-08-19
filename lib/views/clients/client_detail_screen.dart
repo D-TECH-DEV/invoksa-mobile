@@ -7,6 +7,7 @@ import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_radius.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/utils/currency_utils.dart';
 import '../../models/client.dart';
 import '../shared/invoice_list_item.dart';
 import 'widgets/client_detail_widgets.dart';
@@ -363,7 +364,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
           invoiceId: invoice.number ?? "FAC-${invoice.id}",
           clientName: client.name,
           date: dateStr,
-          amount: '${invoice.total.toInt()} FCFA',
+          amount: formatFcfa(invoice.total),
           status: invoice.status,
           invoice: invoice,
         );

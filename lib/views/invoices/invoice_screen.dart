@@ -8,6 +8,7 @@ import '../shared/section_header.dart';
 import 'widgets/invoice_filter_chip.dart';
 import '../shared/invoice_list_item.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/utils/currency_utils.dart';
 import '../shared/empty_state_widget.dart';
 
 class InvoiceScreen extends StatefulWidget {
@@ -297,7 +298,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           invoiceId: invoice.number ?? "______",
           clientName: invoice.client?.name ?? "Client inconnu",
           date: invoice.formattedDate,
-          amount: '${invoice.total} FCFA',
+          amount: formatFcfa(invoice.total),
           status: invoice.currentStatusName, // Use currentStatusName to get parsed state
           invoice: invoice,
           onChanged: () {

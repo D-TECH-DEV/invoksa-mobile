@@ -3,6 +3,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/utils/currency_utils.dart';
 
 class ClientSelector extends StatelessWidget {
   final String name;
@@ -154,7 +155,7 @@ class ArticleEntryCard extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              'Total: ${(quantity * unitPrice).toStringAsFixed(2)} FCFA',
+              'Total: ${formatFcfa(quantity * unitPrice)}',
               style: AppTextStyles.headingMedium.copyWith(fontSize: 14),
             ),
           ),
@@ -186,15 +187,15 @@ class InvoiceSummaryCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildSummaryRow('Sous-total', '${subtotal.toStringAsFixed(2)} FCFA'),
+          _buildSummaryRow('Sous-total', formatFcfa(subtotal)),
           const SizedBox(height: 8),
-          _buildSummaryRow('TVA (20%)', '${tax.toStringAsFixed(2)} FCFA'),
+          _buildSummaryRow('TVA (20%)', formatFcfa(tax)),
           const Divider(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Total Général', style: AppTextStyles.headingMedium),
-              Text('${total.toStringAsFixed(2)} FCFA', style: AppTextStyles.headingLarge.copyWith(fontSize: 20)),
+              Text(formatFcfa(total), style: AppTextStyles.headingLarge.copyWith(fontSize: 20)),
             ],
           ),
         ],

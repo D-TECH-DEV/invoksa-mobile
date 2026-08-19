@@ -4,6 +4,8 @@ import '../models/invoice.dart';
 import '../repositories/invoice_repository.dart';
 import '../repositories/client_repository.dart';
 
+enum DashboardPeriod { week, month, year }
+
 class DashboardViewModel extends ChangeNotifier {
   final InvoiceRepository _invoiceRepository = InvoiceRepository();
   final ClientRepository _clientRepository = ClientRepository();
@@ -17,9 +19,21 @@ class DashboardViewModel extends ChangeNotifier {
   double totalRevenue = 0;
   List<Client> recentClients = [];
   List<Invoice> recentInvoices = [];
-  
-  // Data for the chart: Month Index (1-12) -> Total Revenue
-  Map<int, double> monthlyRevenue = {};
+
+  // Toutes les factures chargées, utilisées pour recalculer le graphe
+  // à chaque changement de période sans refaire d'appel réseau.
+  List<Invoice> _invoices = [];
+
+  DashboardPeriod selectedPeriod = DashboardPeriod.year;
+
+  // Données du graphe pour la période sélectionnée :
+  // - Année  : mois (1-12)     -> revenu du mois
+  // - Mois   : jour du mois    -> revenu du jour
+  // - Semaine: jour de semaine (1=lundi..7=dimanche) -> revenu du jour
+  Map<int, double> chartData = {};
+
+  // Total des revenus sur la période sélectionnée (affiché en haut du dashboard).
+  double periodRevenue = 0;
 
   Future<void> loadDashboardData() async {
     try {
@@ -29,26 +43,15 @@ class DashboardViewModel extends ChangeNotifier {
 
       // Fetch all invoices
       final invoices = await _invoiceRepository.getInvoice();
+      _invoices = invoices;
       totalInvoices = invoices.length;
-      
+
       // Calculate stats
       paidInvoices = invoices.where((inv) => inv.status.toUpperCase() == 'PAID').length;
       pendingInvoices = invoices.where((inv) => inv.status.toUpperCase() == 'PENDING').length;
       totalRevenue = invoices.fold(0, (sum, inv) => sum + inv.total);
-      
-      // Calculate monthly revenue for the current year
-      monthlyRevenue = {};
-      final now = DateTime.now();
-      for (int i = 1; i <= 12; i++) {
-        monthlyRevenue[i] = 0;
-      }
-      
-      for (var inv in invoices) {
-        if (inv.createdAt != null && inv.createdAt!.year == now.year) {
-          int month = inv.createdAt!.month;
-          monthlyRevenue[month] = (monthlyRevenue[month] ?? 0) + inv.total;
-        }
-      }
+
+      _computeChartData();
 
       // Tri par date de dernière modification (updatedAt) : le plus récemment
       // modifié en premier. Spécifique au dashboard — les autres écrans
@@ -72,6 +75,75 @@ class DashboardViewModel extends ChangeNotifier {
       errorMessage = _getFriendlyErrorMessage(e);
       notifyListeners();
     }
+  }
+
+  /// Change la période affichée (semaine / mois / année) et recalcule
+  /// aussitôt le graphe à partir des factures déjà chargées.
+  void setPeriod(DashboardPeriod period) {
+    if (selectedPeriod == period) return;
+    selectedPeriod = period;
+    _computeChartData();
+    notifyListeners();
+  }
+
+  void _computeChartData() {
+    switch (selectedPeriod) {
+      case DashboardPeriod.year:
+        chartData = _revenueByMonthOfYear();
+        break;
+      case DashboardPeriod.month:
+        chartData = _revenueByDayOfMonth();
+        break;
+      case DashboardPeriod.week:
+        chartData = _revenueByDayOfWeek();
+        break;
+    }
+    periodRevenue = chartData.values.fold(0, (sum, v) => sum + v);
+  }
+
+  // Revenu de l'année en cours, réparti par mois (1-12).
+  Map<int, double> _revenueByMonthOfYear() {
+    final now = DateTime.now();
+    final Map<int, double> data = {for (var i = 1; i <= 12; i++) i: 0};
+    for (var inv in _invoices) {
+      final d = inv.createdAt;
+      if (d != null && d.year == now.year) {
+        data[d.month] = (data[d.month] ?? 0) + inv.total;
+      }
+    }
+    return data;
+  }
+
+  // Revenu du mois en cours, réparti par jour.
+  Map<int, double> _revenueByDayOfMonth() {
+    final now = DateTime.now();
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final Map<int, double> data = {for (var i = 1; i <= daysInMonth; i++) i: 0};
+    for (var inv in _invoices) {
+      final d = inv.createdAt;
+      if (d != null && d.year == now.year && d.month == now.month) {
+        data[d.day] = (data[d.day] ?? 0) + inv.total;
+      }
+    }
+    return data;
+  }
+
+  // Revenu de la semaine en cours (lundi -> dimanche), réparti par jour.
+  Map<int, double> _revenueByDayOfWeek() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+    final Map<int, double> data = {for (var i = 1; i <= 7; i++) i: 0};
+    for (var inv in _invoices) {
+      final d = inv.createdAt;
+      if (d == null) continue;
+      final dayOnly = DateTime(d.year, d.month, d.day);
+      final diff = dayOnly.difference(startOfWeek).inDays;
+      if (diff >= 0 && diff < 7) {
+        data[diff + 1] = (data[diff + 1] ?? 0) + inv.total;
+      }
+    }
+    return data;
   }
 
   String _getFriendlyErrorMessage(dynamic e) {

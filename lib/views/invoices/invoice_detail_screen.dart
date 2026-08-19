@@ -7,6 +7,7 @@ import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_radius.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/utils/currency_utils.dart';
 import 'widgets/invoice_detail_widgets.dart';
 
 class InvoiceDetailScreen extends StatefulWidget {
@@ -155,35 +156,31 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
               invoiceNumber: _currentInvoice.number ?? '0000',
               status: _currentInvoice.currentStatusName,
             ),
-            const SizedBox(height: 32),
-            InvoicePartiesSection(
+            const SizedBox(height: 24),
+            InvoiceInfoCard(
               clientName: _currentInvoice.client?.name ?? 'Client inconnu',
               clientAddress: _currentInvoice.client?.address ?? '',
               clientEmail: _currentInvoice.client?.email ?? '',
-              clientAvatar: 'https://i.pravatar.cc/150?u=${_currentInvoice.client?.id ?? 0}',
-            ),
-            const SizedBox(height: 32),
-            InvoiceDatesSection(
               issuedDate: issuedDateStr,
               dueDate: dueDateStr,
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 32),
             InvoiceItemsSection(
               items: (_currentInvoice.items ?? []).map((item) {
                 return InvoiceItemData(
                   description: item.description,
                   quantity: item.quantity,
-                  price: item.price.toStringAsFixed(2),
-                  amount: (item.quantity * item.price).toStringAsFixed(2),
+                  price: formatFcfa(item.price),
+                  amount: formatFcfa(item.quantity * item.price),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
             InvoiceTotalsSection(
-              subtotal: _currentInvoice.total.toStringAsFixed(2),
-              taxAmount: "0.00",
-              discountAmount: "0.00",
-              grandTotal: _currentInvoice.total.toStringAsFixed(2),
+              subtotal: formatFcfa(_currentInvoice.total),
+              taxAmount: formatFcfa(0),
+              discountAmount: formatFcfa(0),
+              grandTotal: formatFcfa(_currentInvoice.total),
             ),
             const SizedBox(height: 120), // Bottom buttons space
           ],
@@ -354,18 +351,18 @@ class InvoiceTotalsSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.slate50.withValues(alpha: 0.5),
+        color: Colors.white,
         border: Border.all(color: AppColors.slate200.withValues(alpha: 0.8)),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
-          _buildRow('Sous-total', '$subtotal FCFA'),
+          _buildRow('Sous-total', subtotal),
           const SizedBox(height: 12),
-          _buildRow('TVA (0%)', '$taxAmount FCFA'), // Ajuster la TVA si nécessaire
-          if (discountAmount != '0' && discountAmount != '0.00') ...[
+          _buildRow('TVA (0%)', taxAmount), // Ajuster la TVA si nécessaire
+          if (discountAmount.isNotEmpty && !discountAmount.startsWith('0 ')) ...[
             const SizedBox(height: 12),
-            _buildRow('Remise', '-$discountAmount FCFA'),
+            _buildRow('Remise', '-$discountAmount'),
           ],
           const SizedBox(height: 16),
           const Divider(height: 1),
@@ -374,7 +371,7 @@ class InvoiceTotalsSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Total', style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500, fontSize: 14)),
-              Text('$grandTotal FCFA', style: AppTextStyles.headingMedium.copyWith(fontWeight: FontWeight.w600, fontSize: 16)),
+              Text(grandTotal, style: AppTextStyles.headingLarge.copyWith(fontWeight: FontWeight.w800, fontSize: 22)),
             ],
           ),
         ],

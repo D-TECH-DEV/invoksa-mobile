@@ -3,6 +3,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/utils/currency_utils.dart';
 
 class ClientHeaderDetail extends StatelessWidget {
   final String name;
@@ -103,11 +104,11 @@ class ClientSummaryCards extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _buildCard('Facturé', '${totalBilled.toInt()} FCFA', AppColors.textPrimary),
+        _buildCard('Facturé', formatFcfa(totalBilled), AppColors.textPrimary),
         const SizedBox(width: AppSpacing.sm),
-        _buildCard('Payé', '${totalPaid.toInt()} FCFA', AppColors.accent),
+        _buildCard('Payé', formatFcfa(totalPaid), AppColors.accent),
         const SizedBox(width: AppSpacing.sm),
-        _buildCard('Dû', '${totalPending.toInt()} FCFA', Colors.orange),
+        _buildCard('Dû', formatFcfa(totalPending), Colors.orange),
       ],
     );
   }
