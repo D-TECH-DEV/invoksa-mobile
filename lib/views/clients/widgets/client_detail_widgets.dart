@@ -103,11 +103,11 @@ class ClientSummaryCards extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _buildCard('Facturé', '${totalBilled.toInt()} F', AppColors.textPrimary),
+        _buildCard('Facturé', '${totalBilled.toInt()} FCFA', AppColors.textPrimary),
         const SizedBox(width: AppSpacing.sm),
-        _buildCard('Payé', '${totalPaid.toInt()} F', AppColors.accent),
+        _buildCard('Payé', '${totalPaid.toInt()} FCFA', AppColors.accent),
         const SizedBox(width: AppSpacing.sm),
-        _buildCard('Dû', '${totalPending.toInt()} F', Colors.orange),
+        _buildCard('Dû', '${totalPending.toInt()} FCFA', Colors.orange),
       ],
     );
   }

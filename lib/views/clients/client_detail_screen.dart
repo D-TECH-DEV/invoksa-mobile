@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:invoksa/view_models/client_viewmodel.dart';
+import 'package:invoksa/view_models/invoice_viewmodel.dart' show InvoiceSortOption;
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
@@ -24,6 +25,7 @@ class ClientDetailScreen extends StatefulWidget {
 class _ClientDetailScreenState extends State<ClientDetailScreen> {
   final ClientViewModel _clientViewModel = ClientViewModel();
   late Client client = widget.client;
+  String sortFilter = "Plus récent";
 
   @override
   void dispose() {
@@ -167,7 +169,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
                       ),
                       TextButton.icon(
                         style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                        onPressed: () {},
+                        onPressed: _showSortBottomSheet,
                         icon: const Text(
                           'Trier par',
                           style: TextStyle(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.bold),
@@ -193,6 +195,113 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
         elevation: 4,
         child: const Icon(Icons.add, color: Colors.white, size: 30),
       ),
+    );
+  }
+
+  void _showSortBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Trier par',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildSortOption(
+                icon: Icons.calendar_today_outlined,
+                title: 'Plus récent',
+                option: InvoiceSortOption.newest,
+              ),
+              _buildSortOption(
+                icon: Icons.history,
+                title: 'Plus ancien',
+                option: InvoiceSortOption.oldest,
+              ),
+              _buildSortOption(
+                icon: Icons.arrow_upward_rounded,
+                title: 'Montant élevé',
+                option: InvoiceSortOption.amountHigh,
+              ),
+              _buildSortOption(
+                icon: Icons.arrow_downward_rounded,
+                title: 'Montant faible',
+                option: InvoiceSortOption.amountLow,
+              ),
+              _buildSortOption(
+                icon: Icons.person_outline,
+                title: 'Nom du client',
+                option: InvoiceSortOption.clientName,
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSortOption({
+    required IconData icon,
+    required String title,
+    required InvoiceSortOption option,
+  }) {
+    bool isSelected = false;
+    switch (option) {
+      case InvoiceSortOption.newest: isSelected = sortFilter == "Plus récent"; break;
+      case InvoiceSortOption.oldest: isSelected = sortFilter == "Plus ancien"; break;
+      case InvoiceSortOption.amountHigh: isSelected = sortFilter == "Montant élevé"; break;
+      case InvoiceSortOption.amountLow: isSelected = sortFilter == "Montant faible"; break;
+      case InvoiceSortOption.clientName: isSelected = sortFilter == "Nom du client"; break;
+    }
+
+    return ListTile(
+      onTap: () {
+        setState(() {
+          _clientViewModel.sortInvoices(option);
+          switch (option) {
+            case InvoiceSortOption.newest: sortFilter = "Plus récent"; break;
+            case InvoiceSortOption.oldest: sortFilter = "Plus ancien"; break;
+            case InvoiceSortOption.amountHigh: sortFilter = "Montant élevé"; break;
+            case InvoiceSortOption.amountLow: sortFilter = "Montant faible"; break;
+            case InvoiceSortOption.clientName: sortFilter = "Nom du client"; break;
+          }
+        });
+        Navigator.pop(context);
+      },
+      leading: Icon(
+        icon,
+        color: isSelected ? AppColors.accent : AppColors.textSecondary,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isSelected ? AppColors.accent : AppColors.textPrimary,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+      trailing: isSelected ? const Icon(Icons.check, color: AppColors.accent, size: 20) : null,
     );
   }
 
@@ -254,7 +363,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
           invoiceId: invoice.number ?? "FAC-${invoice.id}",
           clientName: client.name,
           date: dateStr,
-          amount: '${invoice.total.toInt()} F',
+          amount: '${invoice.total.toInt()} FCFA',
           status: invoice.status,
           invoice: invoice,
         );

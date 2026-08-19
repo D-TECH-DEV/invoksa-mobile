@@ -154,7 +154,7 @@ class ArticleEntryCard extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              'Total: ${(quantity * unitPrice).toStringAsFixed(2)} F',
+              'Total: ${(quantity * unitPrice).toStringAsFixed(2)} FCFA',
               style: AppTextStyles.headingMedium.copyWith(fontSize: 14),
             ),
           ),
@@ -186,15 +186,15 @@ class InvoiceSummaryCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildSummaryRow('Sous-total', '${subtotal.toStringAsFixed(2)} F'),
+          _buildSummaryRow('Sous-total', '${subtotal.toStringAsFixed(2)} FCFA'),
           const SizedBox(height: 8),
-          _buildSummaryRow('TVA (20%)', '${tax.toStringAsFixed(2)} F'),
+          _buildSummaryRow('TVA (20%)', '${tax.toStringAsFixed(2)} FCFA'),
           const Divider(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Total Général', style: AppTextStyles.headingMedium),
-              Text('${total.toStringAsFixed(2)} F', style: AppTextStyles.headingLarge.copyWith(fontSize: 20)),
+              Text('${total.toStringAsFixed(2)} FCFA', style: AppTextStyles.headingLarge.copyWith(fontSize: 20)),
             ],
           ),
         ],

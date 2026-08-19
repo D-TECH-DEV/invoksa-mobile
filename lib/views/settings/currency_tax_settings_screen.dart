@@ -147,7 +147,7 @@ class _CurrencyTaxSettingsScreenState extends State<CurrencyTaxSettingsScreen> {
             return DropdownMenuItem<String>(
               value: currency,
               child: Text(
-                currency,
+                currency == 'XOF' ? 'XOF (Franc CFA)' : currency,
                 style: const TextStyle(
                   color: AppColors.slate900,
                   fontWeight: FontWeight.w600,

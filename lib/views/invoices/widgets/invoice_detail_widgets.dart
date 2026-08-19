@@ -38,20 +38,20 @@ class InvoiceHeaderSection extends StatelessWidget {
 
     switch (status.toUpperCase()) {
       case 'PAID':
-        text = 'Paid';
+        text = 'Payée';
         color = AppColors.success;
         break;
+      case 'UNPAID':
+        text = 'Impayée';
+        color = AppColors.danger;
+        break;
       case 'DRAFT':
-        text = 'Draft';
+        text = 'Brouillon';
         color = AppColors.slate400;
         break;
       case 'PENDING':
-        text = 'Unpaid';
+        text = 'En attente';
         color = AppColors.slate600;
-        break;
-      case 'OVERDUE':
-        text = 'Overdue';
-        color = AppColors.danger;
         break;
       default:
         text = status;
@@ -231,7 +231,7 @@ class InvoiceItemsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Items',
+          'Articles',
           style: AppTextStyles.caption.copyWith(color: AppColors.slate500, fontSize: 13),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -254,8 +254,8 @@ class InvoiceItemsSection extends StatelessWidget {
                 child: Row(
                   children: [
                     Expanded(flex: 3, child: Text('Description', style: AppTextStyles.caption.copyWith(fontSize: 12))),
-                    Expanded(child: Text('Qty x Price', style: AppTextStyles.caption.copyWith(fontSize: 12), textAlign: TextAlign.center)),
-                    Expanded(child: Text('Amount', style: AppTextStyles.caption.copyWith(fontSize: 12), textAlign: TextAlign.right)),
+                    Expanded(child: Text('Qté x Prix', style: AppTextStyles.caption.copyWith(fontSize: 12), textAlign: TextAlign.center)),
+                    Expanded(child: Text('Montant', style: AppTextStyles.caption.copyWith(fontSize: 12), textAlign: TextAlign.right)),
                   ],
                 ),
               ),
@@ -276,8 +276,8 @@ class InvoiceItemsSection extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(flex: 3, child: Text(item.description, style: AppTextStyles.body.copyWith(fontSize: 13, fontWeight: FontWeight.w500), maxLines: 2, overflow: TextOverflow.ellipsis)),
                       Expanded(child: Text('${item.quantity} x ${item.price}', style: AppTextStyles.body.copyWith(fontSize: 13, fontWeight: FontWeight.w500), textAlign: TextAlign.center)),
-                      //Expanded(child: Text('\$${item.price}', style: AppTextStyles.body.copyWith(fontSize: 13, color: AppColors.slate600), textAlign: TextAlign.right)),
-                      Expanded(child: Text('\$${item.amount}', style: AppTextStyles.body.copyWith(fontSize: 13, fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
+                      //Expanded(child: Text('${item.price} FCFA', style: AppTextStyles.body.copyWith(fontSize: 13, color: AppColors.slate600), textAlign: TextAlign.right)),
+                      Expanded(child: Text('${item.amount} FCFA', style: AppTextStyles.body.copyWith(fontSize: 13, fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
                     ],
                   ),
                 );

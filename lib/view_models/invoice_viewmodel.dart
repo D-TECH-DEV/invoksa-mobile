@@ -47,12 +47,26 @@ class InvoiceViewmodel extends ChangeNotifier {
       notifyListeners();
 
       final newInvoice = await _invoiceServices.createInvoice(client, invoiceItems, statusCode);
-      await loadClients();
+      allInvoices.insert(0, newInvoice);
+      _applyFilters();
+      
+      try {
+        await loadClients();
+      } catch (e) {
+        if (kDebugMode) print("Error loading clients after invoice creation: $e");
+      }
+      
+      errorMessage = null; // Clear any error set by loadClients
 
       if (statusCode == 500) { // PENDING
-        // Schedule reminder for 30 days after creation
-        final dueDate = newInvoice.createdAt?.add(const Duration(days: 30)) ?? DateTime.now().add(const Duration(days: 30));
-        await NotificationService().scheduleInvoiceReminder(newInvoice.id!, newInvoice.number ?? "Facture", dueDate);
+        try {
+          // Schedule reminder for 30 days after creation
+          final dueDate = newInvoice.createdAt?.add(const Duration(days: 30)) ?? DateTime.now().add(const Duration(days: 30));
+          await NotificationService().scheduleInvoiceReminder(newInvoice.id!, newInvoice.number ?? "Facture", dueDate);
+        } catch (e) {
+          if (kDebugMode) print("Error scheduling notification: $e");
+          // Non-critical error, don't throw
+        }
       }
 
       isLoading = false;

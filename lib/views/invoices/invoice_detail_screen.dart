@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_radius.dart';
+import '../../core/routes/app_routes.dart';
 import 'widgets/invoice_detail_widgets.dart';
 
 class InvoiceDetailScreen extends StatefulWidget {
@@ -49,8 +50,8 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
   Widget build(BuildContext context) {
     // Format dates realistically
     final DateFormat formatter = DateFormat('dd MMM yyyy');
-    String issuedDateStr = 'Unknown';
-    String dueDateStr = 'Unknown';
+    String issuedDateStr = 'Inconnue';
+    String dueDateStr = 'Inconnue';
     
     if (_currentInvoice.createdAt != null) {
       issuedDateStr = formatter.format(_currentInvoice.createdAt!);
@@ -78,7 +79,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
               onPressed: () async {
                 final result = await Navigator.pushNamed(
                   context,
-                  '/invoiceCreate',
+                  AppRoutes.invoiceCreate,
                   arguments: _currentInvoice,
                 );
                 if (result == true) {
@@ -89,7 +90,17 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
           IconButton(
             icon: const Icon(Icons.share_outlined, color: AppColors.textPrimary),
             onPressed: () {
-              _invoiceViewmodel.shareInvoice(_currentInvoice.token!);
+              final token = _currentInvoice.token;
+              if (token == null || token.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Lien de partage indisponible pour cette facture.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+              _invoiceViewmodel.shareInvoice(token);
             },
           ),
           IconButton(
@@ -349,12 +360,12 @@ class InvoiceTotalsSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildRow('Subtotal', '\$$subtotal'),
+          _buildRow('Sous-total', '$subtotal FCFA'),
           const SizedBox(height: 12),
-          _buildRow('Tax (0%)', '\$$taxAmount'), // Modify tax accordingly if needed
+          _buildRow('TVA (0%)', '$taxAmount FCFA'), // Ajuster la TVA si nécessaire
           if (discountAmount != '0' && discountAmount != '0.00') ...[
             const SizedBox(height: 12),
-            _buildRow('Discount', '-\$$discountAmount'),
+            _buildRow('Remise', '-$discountAmount FCFA'),
           ],
           const SizedBox(height: 16),
           const Divider(height: 1),
@@ -362,8 +373,8 @@ class InvoiceTotalsSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Grand total', style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500, fontSize: 14)),
-              Text('\$$grandTotal', style: AppTextStyles.headingMedium.copyWith(fontWeight: FontWeight.w600, fontSize: 16)),
+              Text('Total', style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500, fontSize: 14)),
+              Text('$grandTotal FCFA', style: AppTextStyles.headingMedium.copyWith(fontWeight: FontWeight.w600, fontSize: 16)),
             ],
           ),
         ],

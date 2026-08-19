@@ -155,6 +155,9 @@ class InvoiceListItem extends StatelessWidget {
       case "PAID":
         iconData = Icons.check;
         break;
+      case "UNPAID":
+        iconData = Icons.money_off;
+        break;
       case "DRAFT":
         iconData = Icons.edit_document;
         break;

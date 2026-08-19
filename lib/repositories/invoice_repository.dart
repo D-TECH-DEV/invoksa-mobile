@@ -32,8 +32,12 @@ class InvoiceRepository {
 
   Future<Invoice> getInvoiceAi (
       String description, String lang, String devise) async {
+    final encodedDesc = Uri.encodeComponent(description);
+    final encodedLang = Uri.encodeComponent(lang);
+    final encodedDevise = Uri.encodeComponent(devise);
+    
     final response = await _apiService.get(
-        "${ApiConstants.invoiceAi}?description=$description&lang=$lang&devise=$devise"
+        "${ApiConstants.invoiceAi}?description=$encodedDesc&lang=$encodedLang&devise=$encodedDevise"
     );
     return Invoice.fromJson(response);
   }

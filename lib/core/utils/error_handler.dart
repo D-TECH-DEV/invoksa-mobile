@@ -26,6 +26,10 @@ class ErrorHandler {
       return "Le serveur met trop de temps à répondre. Veuillez réessayer.";
     }
 
+    if (error.contains('ia') || error.contains('ai')) {
+      return e.toString().replaceFirst("Exception: ", "").replaceFirst("Erreur IA: ", "");
+    }
+
     // Default message for other errors, avoiding technical details
     return "Une erreur inattendue est survenue. Veuillez réessayer.";
   }

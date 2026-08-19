@@ -4,12 +4,12 @@ class ApiConstants {
   static String get baseUrl => dotenv.get('API_BASE_URL', fallback: "https://invoksa-api.you-soft.tech/api");
 
   // Timeout
-  static const Duration connectTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
+  static const Duration connectTimeout = Duration(seconds: 60);
+  static const Duration receiveTimeout = Duration(seconds: 60);
 
   // Endpoints
   static String get login => "$baseUrl/auth/login";
-  static String get register => "/auth/register";
+  static String get register => "$baseUrl/auth/register";
 
   static String get clients => "/clients";
   static String get myClients => "/clients/me";

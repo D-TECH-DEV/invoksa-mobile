@@ -297,7 +297,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           invoiceId: invoice.number ?? "______",
           clientName: invoice.client?.name ?? "Client inconnu",
           date: invoice.formattedDate,
-          amount: '${invoice.total} F',
+          amount: '${invoice.total} FCFA',
           status: invoice.currentStatusName, // Use currentStatusName to get parsed state
           invoice: invoice,
           onChanged: () {

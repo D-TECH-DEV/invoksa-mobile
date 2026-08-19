@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import 'client.dart';
 import 'invoice_item.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +22,7 @@ class Invoice {
 
   String get currentStatusName {
     if (statusCode == 200 || status.toUpperCase() == "PAID") return "PAID";
+    if (statusCode == 400 || status.toUpperCase() == "UNPAID") return "UNPAID";
     if (statusCode == 100 || status.toUpperCase() == "DRAFT") return "DRAFT";
     if (statusCode == 500 || status.toUpperCase() == "PENDING") return "PENDING";
     return status;
@@ -29,6 +32,8 @@ class Invoice {
     switch (currentStatusName) {
       case "PAID":
         return "Payé";
+      case "UNPAID":
+        return "Impayé";
       case "DRAFT":
         return "Brouillon";
       case "PENDING":
@@ -42,12 +47,14 @@ class Invoice {
     switch (currentStatusName) {
       case "PAID":
         return Colors.green;
+      case "UNPAID":
+        return Colors.red;
       case "DRAFT":
         return Colors.grey;
       case "PENDING":
         return Colors.orange;
       default:
-        return Colors.red;
+        return Colors.grey;
     }
   }
 
@@ -80,14 +87,29 @@ class Invoice {
 
     if (statusVal is int) {
       statusCode = statusVal;
-      statusStr = (statusVal == 200 ? "PAID" : (statusVal == 100 ? "DRAFT" : "PENDING"));
+      statusStr = switch (statusVal) {
+        200 => "PAID",
+        400 => "UNPAID",
+        100 => "DRAFT",
+        500 => "PENDING",
+        _ => "UNKNOWN",
+      };
     } else {
       statusStr = statusVal?.toString() ?? "PENDING";
-      statusCode = (statusStr == "PAID" ? 200 : (statusStr == "DRAFT" ? 100 : 500));
+      final upperStatus = statusStr.toUpperCase();
+      statusCode = switch (upperStatus) {
+        "PAID" => 200,
+        "UNPAID" => 400,
+        "DRAFT" => 100,
+        "PENDING" => 500,
+        _ => null,
+      };
     }
 
     return Invoice(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      id: json['id'] is int 
+          ? json['id'] 
+          : (json['id'] != null ? num.tryParse(json['id'].toString())?.toInt() : null),
       total: (json['total'] as num?)?.toDouble() ?? 0.0,
       status: statusStr,
       statusCode: statusCode,
@@ -109,7 +131,12 @@ class Invoice {
     'id': id,
     'client': client != null ? {'id': client!.id} : null,
     'total': total,
-    'status': statusCode ?? (status == "PAID" ? 200 : (status == "DRAFT" ? 100 : 500)),
+    'status': statusCode ?? switch (status.toUpperCase()) {
+      "PAID" => 200,
+      "UNPAID" => 400,
+      "DRAFT" => 100,
+      _ => 500,
+    },
     'createdAt': createdAt?.toIso8601String(),
     'updatedAt': updatedAt?.toIso8601String(),
     'items': (items ?? []).map((x) => x.toJson()).toList(),

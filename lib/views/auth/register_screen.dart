@@ -55,17 +55,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   
-                  const SizedBox(height: 12),
+                  // const SizedBox(height: 12),
                   
-                  const Text(
-                    'Rejoignez Invoksa et commencez à gérer\nvos finances avec style.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 15,
-                      height: 1.5,
-                    ),
-                  ),
+                  // const Text(
+                  //   'Rejoignez Invoksa et commencez à gérer\nvos finances avec style.',
+                  //   textAlign: TextAlign.center,
+                  //   style: TextStyle(
+                  //     color: AppColors.textSecondary,
+                  //     fontSize: 15,
+                  //     height: 1.5,
+                  //   ),
+                  // ),
                   
                   const SizedBox(height: 40),
 
@@ -139,19 +139,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         },
                       ),
                   
-                  const SizedBox(height: 30),
+                  // const SizedBox(height: 30),
                   
-                  const DividerWithText(text: 'OU S\'INSCRIRE AVEC'),
+                  // const DividerWithText(text: 'OU S\'INSCRIRE AVEC'),
                   
-                  const SizedBox(height: 24),
+                  // const SizedBox(height: 24),
                   
-                  Row(
-                    children: [
-                      SocialAuthButton(text: 'Google', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Inscription Google")),
-                      const SizedBox(width: 16),
-                      SocialAuthButton(text: 'Apple', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Inscription Apple")),
-                    ],
-                  ),
+                  // Row(
+                  //   children: [
+                  //     SocialAuthButton(text: 'Google', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Inscription Google")),
+                  //     const SizedBox(width: 16),
+                  //     SocialAuthButton(text: 'Apple', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Inscription Apple")),
+                  //   ],
+                  // ),
                   
                   const SizedBox(height: 40),
                   

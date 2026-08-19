@@ -117,7 +117,7 @@ class _CompanySettingsScreenState extends State<CompanySettingsScreen> {
                   
                   const SizedBox(height: 20),
                   _buildLabel('ADRESSE'),
-                  _buildTextField(_addressController, 'Ex: 123 Rue de la Paix, Paris', Icons.location_on_rounded),
+                  _buildTextField(_addressController, 'Ex: Rue des Jardins, Cocody, Abidjan', Icons.location_on_rounded),
                   
                   const SizedBox(height: 20),
                   Row(
@@ -127,7 +127,7 @@ class _CompanySettingsScreenState extends State<CompanySettingsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildLabel('TÉLÉPHONE'),
-                            _buildTextField(_phoneController, 'Ex: +33 1 23 45 67 89', Icons.phone_rounded),
+                            _buildTextField(_phoneController, 'Ex: +225 07 00 00 00 00', Icons.phone_rounded),
                           ],
                         ),
                       ),
@@ -146,7 +146,7 @@ class _CompanySettingsScreenState extends State<CompanySettingsScreen> {
                   
                   const SizedBox(height: 20),
                   _buildLabel('MENTIONS LÉGALES'),
-                  _buildTextField(_legalController, 'Ex: SIRET, Capital social, TVA intracommunautaire...', Icons.article_rounded, maxLines: 3),
+                  _buildTextField(_legalController, 'Ex: RCCM, Compte Contribuable, Capital social...', Icons.article_rounded, maxLines: 3),
                   
                   const SizedBox(height: 20),
                   Row(

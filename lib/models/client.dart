@@ -24,11 +24,15 @@ class Client {
 
   factory Client.fromJson(Map<String, dynamic> json) {
     return Client(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      id: json['id'] is int 
+          ? json['id'] 
+          : (json['id'] != null ? num.tryParse(json['id'].toString())?.toInt() : null),
       name: json['name']?.toString() ?? 'Inconnu',
       email: json['email']?.toString() ?? '',
       phone: json['phone']?.toString() ?? '',
       address: json['address']?.toString() ?? '',
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'].toString()) : null,
     );
   }
 

@@ -6,6 +6,7 @@ import 'package:invoksa/models/invoice.dart';
 import 'package:invoksa/repositories/client_repository.dart';
 import '../core/utils/validators.dart';
 import '../core/utils/error_handler.dart';
+import 'invoice_viewmodel.dart' show InvoiceSortOption;
 
 class ClientViewModel extends ChangeNotifier {
   final ClientRepository _clientRepository = ClientRepository();
@@ -173,5 +174,27 @@ class ClientViewModel extends ChangeNotifier {
       notifyListeners();
     }
     return false;
+  }
+
+  /// Trie [invoices] (l'historique des factures du client affiché).
+  void sortInvoices(InvoiceSortOption option) {
+    switch (option) {
+      case InvoiceSortOption.newest:
+        invoices.sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+        break;
+      case InvoiceSortOption.oldest:
+        invoices.sort((a, b) => (a.createdAt ?? DateTime(0)).compareTo(b.createdAt ?? DateTime(0)));
+        break;
+      case InvoiceSortOption.amountHigh:
+        invoices.sort((a, b) => b.total.compareTo(a.total));
+        break;
+      case InvoiceSortOption.amountLow:
+        invoices.sort((a, b) => a.total.compareTo(b.total));
+        break;
+      case InvoiceSortOption.clientName:
+        invoices.sort((a, b) => (a.client?.name ?? '').compareTo(b.client?.name ?? ''));
+        break;
+    }
+    notifyListeners();
   }
 }

@@ -15,13 +15,14 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final AuthViewModel _viewModel = AuthViewModel();
-  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
 
   @override
   void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -65,17 +66,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   
-                  const SizedBox(height: 12),
+                  // const SizedBox(height: 12),
                   
-                  const Text(
-                    'Gérez vos factures et vos clients en\ntoute simplicité.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 15,
-                      height: 1.5,
-                    ),
-                  ),
+                  // const Text(
+                  //   'Gérez vos factures et vos clients en\ntoute simplicité.',
+                  //   textAlign: TextAlign.center,
+                  //   style: TextStyle(
+                  //     color: AppColors.textSecondary,
+                  //     fontSize: 15,
+                  //     height: 1.5,
+                  //   ),
+                  // ),
                   
                   const SizedBox(height: 40),
 
@@ -102,15 +103,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 20),
                   ],
 
-                  AuthTextField(
-                    label: 'User name',
-                    hint: 'You Soft',
-                    icon: Icons.mail_outline,
-                    controller: _nameController,
-                  ),
-
-                  const SizedBox(height: AppSpacing.lg),
-                  
                   AuthTextField(
                     label: 'Adresse Email',
                     hint: 'nom@exemple.com',
@@ -145,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 TextField(
                                   controller: resetController,
                                   decoration: const InputDecoration(
-                                    labelText: 'Email',
+                                    labelText: 'Adresse email',
                                     border: OutlineInputBorder(),
                                   ),
                                 ),
@@ -178,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: 8),
                   
                   _viewModel.isLoading 
                     ? const CircularProgressIndicator(color: Color(0xFF2EC4B6))
@@ -187,7 +179,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         icon: Icons.arrow_forward_rounded,
                         onPressed: () async {
                           final success = await _viewModel.login(
-                            _nameController.text.trim(),
                             _emailController.text.trim(),
                             _passwordController.text.trim(),
                           );
@@ -197,19 +188,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                   
-                  const SizedBox(height: 30),
+                  // const SizedBox(height: 30),
                   
-                  const DividerWithText(text: 'OU CONTINUER AVEC'),
+                  // const DividerWithText(text: 'OU CONTINUER AVEC'),
                   
-                  const SizedBox(height: 24),
+                  // const SizedBox(height: 24),
                   
-                  Row(
-                    children: [
-                      SocialAuthButton(text: 'Google', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Connexion Google")),
-                      const SizedBox(width: 16),
-                      SocialAuthButton(text: 'Apple', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Connexion Apple")),
-                    ],
-                  ),
+                  // Row(
+                  //   children: [
+                  //     SocialAuthButton(text: 'Google', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Connexion Google")),
+                  //     const SizedBox(width: 16),
+                  //     SocialAuthButton(text: 'Apple', onPressed: () => AppUtils.showComingSoonSnackBar(context, "Connexion Apple")),
+                  //   ],
+                  // ),
                   
                   const SizedBox(height: 40),
                   

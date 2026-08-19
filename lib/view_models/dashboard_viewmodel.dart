@@ -50,19 +50,19 @@ class DashboardViewModel extends ChangeNotifier {
         }
       }
 
-      // Sort invoices by date and take recent ones
+      // Tri par date de dernière modification (updatedAt) : le plus récemment
+      // modifié en premier. Spécifique au dashboard — les autres écrans
+      // (liste des factures/clients) gardent leur propre tri.
       final sortedInvoices = List<Invoice>.from(invoices)
-        ..sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+        ..sort((a, b) => (b.updatedAt ?? b.createdAt ?? DateTime(0))
+            .compareTo(a.updatedAt ?? a.createdAt ?? DateTime(0)));
       recentInvoices = sortedInvoices.take(5).toList();
 
       // Fetch clients
       final clients = await _clientRepository.getMyClients();
-      
-      // For recent clients, we could sort by createdAt if available, 
-      // or just take the latest ones added.
-      // Assuming Client also has createdAt
+
       final sortedClients = List<Client>.from(clients)
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       recentClients = sortedClients.take(5).toList();
 
       isLoading = false;

@@ -21,7 +21,10 @@ class AppValidators {
     if (value == null || value.isEmpty) {
       return "Le numéro de téléphone est requis";
     }
-    if (!_phoneRegExp.hasMatch(value)) {
+    // Les champs de saisie suggèrent un format avec espaces (ex: "+225 00 00 00 00 00") ;
+    // on ignore espaces/tirets/parenthèses avant de vérifier les chiffres.
+    final normalized = value.replaceAll(RegExp(r'[\s\-().]'), '');
+    if (!_phoneRegExp.hasMatch(normalized)) {
       return "Format de téléphone invalide (8-15 chiffres)";
     }
     return null;

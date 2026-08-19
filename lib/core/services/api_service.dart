@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import 'token_service.dart';
@@ -22,6 +23,7 @@ class ApiService {
 
     final headers = {
       "Content-Type": ApiConstants.contentType,
+      "Accept": "application/json",
     };
 
     if (token != null) {
@@ -47,9 +49,13 @@ class ApiService {
       }
     }
 
+    final url = Uri.parse(endpoint.startsWith('http') ? endpoint : "${ApiConstants.baseUrl}$endpoint");
+    
+    if (kDebugMode) print("ApiService GET: $url");
+
     final response = await http
         .get(
-      Uri.parse("${ApiConstants.baseUrl}$endpoint"),
+      url,
       headers: await _headers(),
     )
         .timeout(ApiConstants.connectTimeout);
@@ -72,9 +78,13 @@ class ApiService {
 
   // GET BYTES
   Future<Uint8List> getBytes(String endpoint) async {
+    final url = Uri.parse(endpoint.startsWith('http') ? endpoint : "${ApiConstants.baseUrl}$endpoint");
+    
+    if (kDebugMode) print("ApiService GET BYTES: $url");
+
     final response = await http
         .get(
-      Uri.parse("${ApiConstants.baseUrl}$endpoint"),
+      url,
       headers: await _headers(),
     )
         .timeout(ApiConstants.connectTimeout);
@@ -90,22 +100,41 @@ class ApiService {
 
   //  POST
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
-    final response = await http
-        .post(
-      Uri.parse("${ApiConstants.baseUrl.startsWith('http') ? '' : ApiConstants.baseUrl}$endpoint".startsWith('http') ? endpoint : "${ApiConstants.baseUrl}$endpoint"),
-      headers: await _headers(),
-      body: jsonEncode(data),
-    )
-        .timeout(ApiConstants.connectTimeout);
+    final url = Uri.parse(endpoint.startsWith('http') ? endpoint : "${ApiConstants.baseUrl}$endpoint");
+    
+    if (kDebugMode) {
+      print("ApiService POST: $url");
+      print("ApiService Payload: ${jsonEncode(data)}");
+    }
 
-    return _handleResponse(response);
+    try {
+      final response = await http
+          .post(
+        url,
+        headers: await _headers(),
+        body: jsonEncode(data),
+      )
+          .timeout(ApiConstants.connectTimeout);
+
+      return _handleResponse(response);
+    } on Exception catch (e) {
+      if (kDebugMode) print("ApiService POST Error: $e");
+      rethrow;
+    }
   }
 
   // PUT
   Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
+    final url = Uri.parse(endpoint.startsWith('http') ? endpoint : "${ApiConstants.baseUrl}$endpoint");
+    
+    if (kDebugMode) {
+      print("ApiService PUT: $url");
+      print("ApiService Payload: ${jsonEncode(data)}");
+    }
+
     final response = await http
         .put(
-      Uri.parse("${ApiConstants.baseUrl}$endpoint"),
+      url,
       headers: await _headers(),
       body: jsonEncode(data),
     )
@@ -116,9 +145,13 @@ class ApiService {
 
   //  DELETE
   Future<dynamic> delete(String endpoint) async {
+    final url = Uri.parse(endpoint.startsWith('http') ? endpoint : "${ApiConstants.baseUrl}$endpoint");
+    
+    if (kDebugMode) print("ApiService DELETE: $url");
+
     final response = await http
         .delete(
-      Uri.parse("${ApiConstants.baseUrl}$endpoint"),
+      url,
       headers: await _headers(),
     )
         .timeout(ApiConstants.connectTimeout);
@@ -128,6 +161,10 @@ class ApiService {
 
   //  Gestion des réponses
   dynamic _handleResponse(http.Response response) {
+    if (kDebugMode) {
+      print("ApiService Response [${response.statusCode}]: ${response.body}");
+    }
+
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return response.body.isEmpty ? {} : jsonDecode(response.body);
     } else if (response.statusCode == 401) {
@@ -136,7 +173,16 @@ class ApiService {
       String errorMessage;
       try {
         final body = jsonDecode(response.body);
-        errorMessage = body["message"] ?? "Erreur API: ${response.statusCode}";
+        if (body is Map) {
+          errorMessage = body["message"] ?? body["error"] ?? "Erreur API: ${response.statusCode}";
+          
+          // Si c'est une erreur de validation (map de champs)
+          if (body.containsKey("username") || body.containsKey("email") || body.containsKey("password")) {
+            errorMessage = body.values.first.toString();
+          }
+        } else {
+          errorMessage = "Erreur API: ${response.statusCode}";
+        }
       } catch (_) {
         // Not a JSON response
         errorMessage = "Erreur Serveur (${response.statusCode}): ${response.body.split('\n').first}";

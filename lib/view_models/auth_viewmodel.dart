@@ -9,14 +9,19 @@ class AuthViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  Future<bool> login(String username, String email, String password) async {
+  Future<bool> login(String email, String password) async {
     try {
       final emailError = AppValidators.validateEmail(email);
-      final passwordError = AppValidators.validatePassword(password);
-      final usernameError = AppValidators.validateRequired(username, "Nom d'utilisateur");
-
-      if (emailError != null || passwordError != null || usernameError != null) {
-        errorMessage = emailError ?? passwordError ?? usernameError;
+      // Suppression du validateur de mot de passe au login comme demandé
+      
+      if (emailError != null) {
+        errorMessage = emailError;
+        notifyListeners();
+        return false;
+      }
+      
+      if (password.isEmpty) {
+        errorMessage = "Le mot de passe est requis";
         notifyListeners();
         return false;
       }
@@ -26,7 +31,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
 
       await _authRepository.login(
-        username,
+        "", // username non utilisé
         email,
         password,
       );

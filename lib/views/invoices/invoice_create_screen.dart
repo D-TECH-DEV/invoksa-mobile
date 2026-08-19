@@ -26,20 +26,9 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
 
   DateTime? _dueDate;
   DateTime? _invoiceDate;
-  String _currency = 'INR';
-  final List<String> _currencies = ['\$', '€', '£', 'XOF', 'FCFA', 'INR'];
+  String _currency = 'FCFA';
+  final List<String> _currencies = ['FCFA', 'XOF', '€', '\$', '£'];
   final TextEditingController _invoiceNumberController = TextEditingController(text: "INV-001");
-
-  // AI Chat State
-  final TextEditingController _aiController = TextEditingController();
-  bool _isListening = false;
-  final List<Map<String, dynamic>> _chatMessages = [
-    {
-      "role": "ai",
-      "text":
-          "Bonjour ! Je suis votre assistant IA. Vous pouvez me dire par exemple : 'Ajoute un logo à 500€'.",
-    },
-  ];
 
   @override
   void initState() {
@@ -78,7 +67,6 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
   @override
   void dispose() {
     _invoiceViewmodel.dispose();
-    _aiController.dispose();
     super.dispose();
   }
 
@@ -370,12 +358,12 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildInputLabel("Prix Unitaire (€)"),
+                        _buildInputLabel("Prix Unitaire ($_currency)"),
                         _buildInput(
                           priceController,
                           "0.00",
                           isNumber: true,
-                          icon: Icons.euro_symbol,
+                          icon: Icons.payments_outlined,
                         ),
                       ],
                     ),
@@ -513,7 +501,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         hintText:
-                            "Décrivez les articles, quantités et prix\n(ex: '3 logos à 150€ et 1 site web à 1200€')...",
+                            "Décrivez les articles, quantités et prix\n(ex: '3 logos à 50 000 FCFA et 1 site web à 500 000 FCFA')...",
                         hintStyle: TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,
@@ -528,7 +516,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                   Row(
                     children: [
                       const Text(
-                        "Made with",
+                        "Généré avec",
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.textPrimary,
@@ -590,9 +578,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                                       'description': item.description,
                                       'quantity': item.quantity,
                                       'price': item.price,
-                                      'total':
-                                          item.total ??
-                                          (item.quantity * item.price),
+                                      'total': item.total,
                                     });
                                   }
                                   setState(() {}); // refresh main view
@@ -609,15 +595,16 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                                   );
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                       content: Text(
-                                        "Désolé, impossible d'extraire les articles.",
+                                        _invoiceViewmodel.errorMessage ?? "Désolé, impossible d'extraire les articles.",
                                       ),
                                       backgroundColor: Colors.red,
                                       behavior: SnackBarBehavior.floating,
                                     ),
                                   );
                                 }
+
                               }
                             },
                       child: isLoading
@@ -1222,7 +1209,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "${item['quantity']} x $_currency${item['price'].toStringAsFixed(2)}",
+                    "${item['quantity']} x ${item['price'].toStringAsFixed(2)} $_currency",
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,
@@ -1235,7 +1222,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  "$_currency${(item['quantity'] * item['price']).toStringAsFixed(2)}",
+                  "${(item['quantity'] * item['price']).toStringAsFixed(2)} $_currency",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -1275,9 +1262,9 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
       ),
       child: Column(
         children: [
-          _buildSummaryRow("Sous-total", "$_currency${subtotal.toStringAsFixed(2)}"),
+          _buildSummaryRow("Sous-total", "${subtotal.toStringAsFixed(2)} $_currency"),
           const SizedBox(height: AppSpacing.sm),
-          _buildSummaryRow("TVA (20%)", "$_currency${tax.toStringAsFixed(2)}"),
+          _buildSummaryRow("TVA (20%)", "${tax.toStringAsFixed(2)} $_currency"),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Divider(color: AppColors.border, height: 1),
@@ -1294,7 +1281,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                 ),
               ),
               Text(
-                "$_currency${total.toStringAsFixed(2)}",
+                "${total.toStringAsFixed(2)} $_currency",
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w800,
@@ -1369,7 +1356,9 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                   ),
                   onPressed: !canSave || isLoading
                       ? null
-                      : () async => await _performSave(500), // 500 = PENDING
+                      // Édition : on garde le statut actuel de la facture (ex. "unpaid") au lieu de
+                      // l'écraser à PENDING. Création : PENDING par défaut, comme avant.
+                      : () async => await _performSave(widget.invoice?.statusCode ?? 500),
                   child: isLoading
                       ? const SizedBox(
                           height: 24,

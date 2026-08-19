@@ -10,8 +10,8 @@ class AuthRepository {
   final TokenService _tokenService = TokenService();
 
   Future<Map<String, dynamic>> login(String username, String email, String password) async {
+    // On n'envoie plus le username au login
     final response = await _apiService.post(ApiConstants.login, {
-      "username": username,
       "email": email,
       "password": password,
     });
