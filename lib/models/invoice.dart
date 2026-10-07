@@ -35,11 +35,11 @@ class Invoice {
       case "UNPAID":
         return "Impayé";
       case "DRAFT":
-        return "Brouillon";
+        return "Corbeille";
       case "PENDING":
         return "En attente";
       default:
-        return "Inconnu";
+        return "Brouillon";
     }
   }
 

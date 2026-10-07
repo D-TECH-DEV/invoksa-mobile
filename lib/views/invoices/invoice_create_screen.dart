@@ -694,26 +694,63 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _buildStepLabel("1", "Destinataire"),
+                const SizedBox(height: AppSpacing.sm),
                 _buildClientSection(),
-                const SizedBox(height: AppSpacing.lg),
-                _buildSettingsSection(),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.xl),
+                _buildStepLabel("2", "Articles à facturer"),
+                const SizedBox(height: AppSpacing.sm),
                 _buildArticlesSection(),
-                const SizedBox(height: AppSpacing.lg),
-                if (_invoiceItems.isNotEmpty) _buildSummarySection(),
-                const SizedBox(height: 100), // padding for FAB and bottom bar
+                if (_invoiceItems.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildSummarySection(),
+                ],
+                const SizedBox(height: AppSpacing.xl),
+                _buildStepLabel("3", "Détails (optionnel)"),
+                const SizedBox(height: AppSpacing.sm),
+                _buildSettingsSection(),
+                const SizedBox(height: 24), // padding for bottom bar
               ],
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _openAIHelperSheet,
-          backgroundColor: AppColors.accent,
-          icon: const Icon(Icons.auto_awesome, color: Colors.white),
-          label: const Text("IA", style: TextStyle(color: Colors.white)),
-        ),
         bottomNavigationBar: _buildSaveButton(),
       ),
+    );
+  }
+
+  // Petit repère "1. Destinataire / 2. Articles / 3. Détails" pour guider
+  // les nouveaux utilisateurs dans l'ordre logique de création d'une facture.
+  Widget _buildStepLabel(String number, String title) {
+    return Row(
+      children: [
+        Container(
+          width: 22,
+          height: 22,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(7),
+          ),
+          child: Text(
+            number,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+          ),
+        ),
+      ],
     );
   }
 
@@ -932,7 +969,13 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            "Échéance à 14 jours et devise locale par défaut — à ajuster si besoin.",
+            style: TextStyle(color: AppColors.textSecondary.withOpacity(0.9), fontSize: 13),
+          ),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
@@ -970,7 +1013,7 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                               children: [
                                 Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
                                 const SizedBox(height: AppSpacing.md),
-                                const Text("Select Currency", style: AppTextStyles.headingMedium),
+                                const Text("Choisir une devise", style: AppTextStyles.headingMedium),
                                 const SizedBox(height: AppSpacing.md),
                                 ..._currencies.map((currency) => ListTile(
                                   title: Text(currency, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -1084,105 +1127,172 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
   }
 
   Widget _buildArticlesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            "ITEMS",
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              letterSpacing: 1.0,
-            ),
+    if (_invoiceItems.isEmpty) {
+      return _buildEmptyArticlesCard();
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_invoiceItems.isEmpty)
-                _buildEmptyArticlesPlaceholder()
-              else
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _invoiceItems.length,
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 1, color: AppColors.border),
-                  itemBuilder: (context, index) =>
-                      _buildArticleItem(index, _invoiceItems[index]),
-                ),
-              if (_invoiceItems.isNotEmpty)
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _invoiceItems.length,
+            separatorBuilder: (context, index) =>
                 const Divider(height: 1, color: AppColors.border),
-              // Add Item row at the bottom of the container
-              InkWell(
-                onTap: () => _openAddOrEditArticleSheet(),
-                borderRadius: BorderRadius.vertical(
-                  bottom: const Radius.circular(16),
-                  top: _invoiceItems.isEmpty ? const Radius.circular(16) : Radius.zero,
+            itemBuilder: (context, index) =>
+                _buildArticleItem(index, _invoiceItems[index]),
+          ),
+          const Divider(height: 1, color: AppColors.border),
+          // Deux façons d'ajouter la suite : à la main, ou en redemandant à l'IA.
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => _openAddOrEditArticleSheet(),
+                  borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(16)),
+                  child: const Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add, color: AppColors.textPrimary, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          "Ajouter un article",
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AppColors.accent,
-                          borderRadius: BorderRadius.circular(8),
+              ),
+              const SizedBox(
+                height: 24,
+                child: VerticalDivider(width: 1, color: AppColors.border),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: _openAIHelperSheet,
+                  borderRadius: const BorderRadius.only(bottomRight: Radius.circular(16)),
+                  child: const Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.auto_awesome, color: AppColors.accent, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          "Avec l'IA",
+                          style: TextStyle(
+                            color: AppColors.accent,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.add,
-                          color: Colors.white, // Dark icon for lime background
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      const Text(
-                        "Ajouter Produit",
-                        style: TextStyle(
-                          color: AppColors.textPrimary, // Changed from primary to textPrimary for black text
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ],
           ),
-        ),
-        // Add Next Button just below as in mockup (Optional, just the style)
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildEmptyArticlesPlaceholder() {
+  // État vide : met en avant l'IA comme moyen le plus rapide de démarrer,
+  // avec l'ajout manuel comme alternative claire mais secondaire.
+  Widget _buildEmptyArticlesCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      child: const Text(
-        "No items yet. Click below to add.",
-        style: TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 14,
-        ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border.withOpacity(0.6)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.accent.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.receipt_long_rounded, color: AppColors.accent, size: 24),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Text(
+            "Aucun article pour l'instant",
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Décrivez vos prestations en une phrase, l'IA remplit la facture pour vous.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary.withOpacity(0.9), fontSize: 13),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _openAIHelperSheet,
+              icon: const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+              label: const Text(
+                "Générer avec l'IA",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextButton(
+            onPressed: () => _openAddOrEditArticleSheet(),
+            child: const Text(
+              "Ou ajouter un article manuellement",
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1380,21 +1490,15 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                         ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
+              // Action secondaire allégée (TextButton) pour que "Enregistrer la
+              // facture" reste le seul choix visuellement évident.
               SizedBox(
                 width: double.infinity,
-                height: 54,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    side: BorderSide(
-                        color: canSave && !isLoading
-                            ? AppColors.primary.withOpacity(0.5)
-                            : Colors.grey.withOpacity(0.3),
-                        width: 1.5),
+                height: 44,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.textSecondary,
                   ),
                   onPressed: !canSave || isLoading
                       ? null
@@ -1402,8 +1506,8 @@ class _InvoiceCreateScreenState extends State<InvoiceCreateScreen> {
                   child: const Text(
                     "Enregistrer comme brouillon",
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
                   ),
                 ),

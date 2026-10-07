@@ -163,29 +163,44 @@ class ClientCard extends StatelessWidget {
     );
   }
 
+  // Même style d'avatar que "Clients récents" sur le dashboard : anneau
+  // dégradé accent + liseré blanc autour des initiales, plus le point de
+  // statut (en ligne/occupé/hors ligne) propre à cette carte.
   Widget _buildAvatar() {
     return Stack(
       children: [
         Container(
+          padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [
+                AppColors.accent.withValues(alpha: 0.8),
+                AppColors.accent.withValues(alpha: 0.3),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 6,
+                color: AppColors.accent.withValues(alpha: 0.15),
+                blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
             ],
           ),
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: InitialsAvatar(fullName: name),
+          child: Container(
+            padding: const EdgeInsets.all(1.5),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: InitialsAvatar(fullName: name, radius: 18),
           ),
         ),
         Positioned(
-          bottom: 1,
-          right: 1,
+          bottom: 0,
+          right: 0,
           child: Container(
             width: 10,
             height: 10,
